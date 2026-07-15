@@ -1,27 +1,32 @@
-// CHANGE FOR NEW WEBSITE: Replace 'mysite' with the site name
-apply plugin: "kei.plugins.extension.legacy"
-apply plugin: 'kotlinx-serialization'
+// ==========================================================
+// BUILD GRADLE TEMPLATE - ANIZEN EXTENSION FRAMEWORK
+// ==========================================================
+// Copy this file to start a new extension.
+// Search for "CHANGE FOR NEW WEBSITE" to find all required modifications.
+// ==========================================================
 
 ext {
     extName = 'MySite' // CHANGE FOR NEW WEBSITE
-    pkgNameSuffix = 'en.mysite' // CHANGE FOR NEW WEBSITE
-    extClass = '.MySite' // CHANGE FOR NEW WEBSITE (must match class name in .kt)
+    pkgNameSuffix = 'en.mysite' // CHANGE FOR NEW WEBSITE (framework prepends base package)
+    extClass = '.MySite' // CHANGE FOR NEW WEBSITE
     extVersionCode = 1
     isNsfw = false
 }
+
+// DO NOT MODIFY: Use the modern legacy extension plugin (replaces common.gradle and kotlin-android)
+apply plugin: "keiyoushi.plugins.extension.legacy"
+apply plugin: 'kotlinx-serialization'
 
 dependencies {
     // DO NOT MODIFY: Core framework utilities
     implementation(project(':core'))
 
     // OPTIONAL: Uncomment extractors based on what the target website uses
-    // Use colons (:) for library project paths, not hyphens (-)
-    // implementation(project(':lib:playlistutils'))
+    // NOTE: Use colon (:) syntax for subprojects, NOT hyphens (-)
     // implementation(project(':lib:filemoonextractor'))
     // implementation(project(':lib:mp4uploadextractor'))
     // implementation(project(':lib:streamwishextractor'))
+    // implementation(project(':lib:playlistutils'))
     // implementation(project(':lib:unpacker'))
     // implementation(project(':lib:cloudflareinterceptor'))
 }
-
-// DO NOT MODIFY: Standard build script (handled by kei.plugins.extension.legacy)
