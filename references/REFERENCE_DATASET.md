@@ -414,3 +414,23 @@ Append new extensions here.
 Append new libraries here.
 
 Do not delete previous references unless intentionally deprecated.
+
+here are the templates for your use
+
+AI_Implementation_Guide.md
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/prompts/AI_Implementation_Guide.md
+
+TemplateFilters.kt
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/templates/TemplateFilters.kt
+
+TemplateDto.kt
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/templates/TemplateDto.kt
+
+MasterTemplate.kt
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/templates/MasterTemplate.kt
+
+template_build.gradle
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/templates/template_build.gradle
+
+TemplateUrlActivity.kt
+https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/templates/TemplateUrlActivity.kt
