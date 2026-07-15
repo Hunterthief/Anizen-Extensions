@@ -7,24 +7,17 @@
 // CHANGE FOR NEW WEBSITE: Update package name
 package eu.kanade.tachiyomi.animeextension.en.mysite
 
-// DO NOT MODIFY: Required imports
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 
-// DO NOT MODIFY: Helper class for translating filter selection to URL params
-abstract class SelectFilter(
-    displayName: String,
-    private val options: Array<Pair<String, String>>,
-) : AnimeFilter.Select<String>(
-    displayName,
-    options.map { it.first }.toTypedArray(),
-) {
-    val selectedValue: String
-        get() = options[state].second
+// DO NOT MODIFY: Helper class. Explicitly inherits from AnimeFilter.Select<String>
+open class UriPartFilter(displayName: String, private val vals: Array<Pair<String, String>>) :
+    AnimeFilter.Select<String>(displayName, vals.map { it.first }.toTypedArray()) {
+    fun toUriPart() = vals[state].second
 }
 
-// CHANGE FOR NEW WEBSITE: Define specific filter classes based on site options
-class GenreFilter : SelectFilter(
+// CHANGE FOR NEW WEBSITE: Define specific filter classes. MUST be public (no 'private' modifier)
+class GenreFilter : UriPartFilter(
     "Genre",
     arrayOf(
         Pair("All", ""),
@@ -38,7 +31,8 @@ class GenreFilter : SelectFilter(
 object MySiteFilters {
     fun getFilterList(): AnimeFilterList {
         return AnimeFilterList(
-            GenreFilter(),
+            AnimeFilter.Header("Text search ignores filters"),
+            GenreFilter()
         )
     }
 }
