@@ -10,29 +10,26 @@ package eu.kanade.tachiyomi.animeextension.en.mysite
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 
-// DO NOT MODIFY: Helper class. Explicitly inherits from AnimeFilter.Select<String>
-open class UriPartFilter(displayName: String, private val vals: Array<Pair<String, String>>) :
-    AnimeFilter.Select<String>(displayName, vals.map { it.first }.toTypedArray()) {
-    fun toUriPart() = vals[state].second
-}
-
-// CHANGE FOR NEW WEBSITE: Define specific filter classes. MUST be public (no 'private' modifier)
-class GenreFilter : UriPartFilter(
-    "Genre",
-    arrayOf(
-        Pair("All", ""),
-        Pair("Action", "action"),
-        Pair("Comedy", "comedy"),
-        Pair("Romance", "romance"),
-    )
-)
-
-// DO NOT MODIFY: Object to hold all filters
 object MySiteFilters {
-    fun getFilterList(): AnimeFilterList {
-        return AnimeFilterList(
-            AnimeFilter.Header("Text search ignores filters"),
-            GenreFilter()
+    fun getFilterList(): AnimeFilterList = AnimeFilterList(
+        AnimeFilter.Header("Text search ignores filters"),
+        GenreFilter()
+    )
+
+    // CRITICAL: MUST BE PUBLIC (no 'private' modifier) so the main extension class can access it
+    class GenreFilter : UriPartFilter(
+        "Genre",
+        arrayOf(
+            Pair("All", ""),
+            Pair("Action", "action"),
+            Pair("Comedy", "comedy"),
+            Pair("Romance", "romance"),
         )
+    )
+
+    // CRITICAL: MUST explicitly inherit from AnimeFilter.Select<String> to satisfy Kotlin's type inference
+    open class UriPartFilter(displayName: String, private val vals: Array<Pair<String, String>>) :
+        AnimeFilter.Select<String>(displayName, vals.map { it.first }.toTypedArray()) {
+        fun toUriPart() = vals[state].second
     }
 }
