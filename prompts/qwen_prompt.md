@@ -21,12 +21,14 @@ Website: [INSERT WEBSITE URL]
 
 # Available Resources
 
-You are provided with:
-• REFERENCE_DATASET.md (The authoritative codebase)
-• The Master Framework & AI Implementation Guide
-• Template Files (MasterTemplate.kt, template_build.gradle, TemplateFilters.kt, TemplateDto.kt, TemplateUrlActivity.kt)
+You MUST read and analyze the following resource before writing any code. Treat it as the authoritative codebase. Never ignore available implementations.
 
-Treat them as the authoritative codebase. Read every reference before writing code. Never ignore available implementations.
+• **REFERENCE_DATASET.md:**
+  https://raw.githubusercontent.com/Hunterthief/Anizen-Extensions/refs/heads/main/references/REFERENCE_DATASET.md
+
+This file is your entry point. It contains the raw GitHub links to all Core utilities, Shared Libraries, existing working extensions, AND the Master Framework templates (including `MasterTemplate.kt`, `template_build.gradle`, `TemplateFilters.kt`, `TemplateDto.kt`, `TemplateUrlActivity.kt`, and the `AI_Implementation_Guide.md`). 
+
+You must fetch and read `REFERENCE_DATASET.md` first, then fetch and read the linked Master Framework templates and AI Implementation Guide before writing any code.
 
 ---
 
