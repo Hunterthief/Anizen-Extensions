@@ -1,13 +1,13 @@
 // CHANGE FOR NEW WEBSITE: Replace 'mysite' with the site name
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+apply plugin: "kei.plugins.extension.legacy"
 apply plugin: 'kotlinx-serialization'
 
 ext {
     extName = 'MySite' // CHANGE FOR NEW WEBSITE
-    pkgName = 'eu.kanade.tachiyomi.animeextension.en.mysite' // CHANGE FOR NEW WEBSITE
+    pkgNameSuffix = 'en.mysite' // CHANGE FOR NEW WEBSITE
     extClass = '.MySite' // CHANGE FOR NEW WEBSITE (must match class name in .kt)
     extVersionCode = 1
+    isNsfw = false
 }
 
 dependencies {
@@ -15,13 +15,13 @@ dependencies {
     implementation(project(':core'))
 
     // OPTIONAL: Uncomment extractors based on what the target website uses
-    // implementation(project(':lib-filemoonextractor'))
-    // implementation(project(':lib-mp4uploadextractor'))
-    // implementation(project(':lib-streamwishextractor'))
-    // implementation(project(':lib-playlistutils'))
-    // implementation(project(':lib-unpacker'))
-    // implementation(project(':lib-cloudflareinterceptor'))
+    // Use colons (:) for library project paths, not hyphens (-)
+    // implementation(project(':lib:playlistutils'))
+    // implementation(project(':lib:filemoonextractor'))
+    // implementation(project(':lib:mp4uploadextractor'))
+    // implementation(project(':lib:streamwishextractor'))
+    // implementation(project(':lib:unpacker'))
+    // implementation(project(':lib:cloudflareinterceptor'))
 }
 
-// DO NOT MODIFY: Standard build script
-apply from: "$rootProject.projectDir/gradle/common.gradle"
+// DO NOT MODIFY: Standard build script (handled by kei.plugins.extension.legacy)
