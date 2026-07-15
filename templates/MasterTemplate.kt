@@ -153,22 +153,45 @@ class MySite : AnimeHttpSource(), ConfigurableAnimeSource {
         val document = client.newCall(GET(episode.url, headers)).execute().asJsoup()
         val videoList = mutableListOf<Video>()
 
-        // CHANGE FOR NEW WEBSITE: CSS Selector for video embeds (iframes)
+        // PATTERN A: Standard Iframe Extraction (Static HTML)
         document.select("div.servers iframe").forEach { iframe ->
             val src = iframe.absUrl("src")
             when {
-                // OPTIONAL: Map domains to extractors
                 src.contains("filemoon") -> {
                     // videoList.addAll(FilemoonExtractor(client).videosFromUrl(src, headers))
                 }
-                src.contains("mp4upload") -> {
-                    // videoList.addAll(Mp4uploadExtractor(client).videosFromUrl(src, headers))
-                }
-                src.contains("streamwish") -> {
-                    // videoList.addAll(StreamWishExtractor(client, headers).videosFromUrl(src))
+            }
+        }
+
+        // PATTERN B: Dynamic API Resolution (XHR/Fetch)
+        // If the site uses JS to fetch video sources via an API, extract the context
+        // (e.g., episode ID, server ID) from the DOM, then construct the API request.
+        /*
+        val episodeId = document.select("div#player").attr("data-episode-id")
+        val servers = document.select("button.server-btn")
+        
+        servers.forEach { serverElement ->
+            val serverId = serverElement.attr("data-server-id")
+            val apiUrl = "$baseUrl/api/v1/video/resolve"
+            val jsonBody = """{"episode_id":"$episodeId","server_id":"$serverId"}"""
+            val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+            
+            val apiResponse = client.newCall(POST(apiUrl, headers, requestBody)).execute()
+            if (apiResponse.isSuccessful) {
+                val json = Json.parseToJsonElement(apiResponse.body.string()).jsonObject
+                val sources = json["sources"]?.jsonArray
+                
+                sources?.forEach { sourceElement ->
+                    val source = sourceElement.jsonObject
+                    val videoUrl = source["url"]?.jsonPrimitive?.content ?: return@forEach
+                    val quality = source["quality"]?.jsonPrimitive?.content ?: "Auto"
+                    
+                    videoList.add(Video(videoUrl, quality, videoUrl, headers))
                 }
             }
         }
+        */
+
         return videoList
     }
 
