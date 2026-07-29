@@ -61,6 +61,7 @@ function downloadView(view) {
 function renderSignature(pi) {
     const sig = pi.providerSignature || {};
     const yn = (v) => v ? '<span class="val bad">YES</span>' : '<span class="val good">NO</span>';
+    const ynGood = (v) => v ? '<span class="val good">YES</span>' : '<span class="val bad">NO</span>';
     const diffCls = sig.difficulty <= 3 ? 'good' : sig.difficulty <= 6 ? 'mid' : 'bad';
     const stabCls = sig.stability >= 7 ? 'good' : sig.stability >= 4 ? 'mid' : 'bad';
     $('signatureBox').innerHTML =
@@ -68,11 +69,421 @@ function renderSignature(pi) {
     '<div class="sig-cell"><div class="lab">Difficulty</div><div class="val ' + diffCls + '">' + (sig.difficulty != null ? sig.difficulty + '/10' : '—') + '</div></div>' +
     '<div class="sig-cell"><div class="lab">Stability</div><div class="val ' + stabCls + '">' + (sig.stability != null ? sig.stability + '/10' : '—') + '</div></div>' +
     '<div class="sig-cell"><div class="lab">Final Output</div><div class="val">' + (sig.finalOutput || '—') + '</div></div>' +
-    '<div class="sig-cell"><div class="lab">Replayable</div>' + yn(!sig.replayable) + '</div>' +
+    '<div class="sig-cell"><div class="lab">Playable Stream Found</div>' + ynGood(sig.playableStreamFound) + '</div>' +
+    '<div class="sig-cell"><div class="lab">Provider Replayable</div>' + ynGood(sig.providerReplayable) + '</div>' +
     '<div class="sig-cell"><div class="lab">Cloudflare</div>' + yn(sig.usesCloudflare) + '</div>' +
     '<div class="sig-cell"><div class="lab">JWT</div>' + yn(sig.usesJWT) + '</div>' +
     '<div class="sig-cell"><div class="lab">AES</div>' + yn(sig.usesAES) + '</div>';
 }
+
+// ---------- Priority 1 + 7: Dimensional Scores renderer ----------
+function renderDimensionalScores(pi) {
+    const box = $('dimensionalScoresBox');
+    const dims = pi.dimensionalScores || {};
+    if (!dims.reverseEngineering) {
+        box.innerHTML = '<div class="empty">No dimensional scores available.</div>';
+        return;
+    }
+
+    const scoreCls = (v) => v <= 3 ? 'good' : v <= 6 ? 'mid' : 'bad';
+    const barColor = (v) => v <= 3 ? 'var(--green)' : v <= 6 ? 'var(--amber)' : 'var(--red)';
+
+    let html = '';
+    // Score cards
+    html += '<div class="dim-grid">';
+    const dimsList = [
+        { key: 'reverseEngineering', label: 'Reverse Eng.' },
+        { key: 'implementation', label: 'Implementation' },
+        { key: 'maintenance', label: 'Maintenance' },
+        { key: 'replayability', label: 'Replayability' }
+    ];
+    dimsList.forEach(d => {
+        const obj = dims[d.key] || {};
+        const score = obj.score != null ? obj.score : 0;
+        html += '<div class="dim-cell">';
+        html += '<div class="dim-lab">' + d.label + '</div>';
+        html += '<div class="dim-val ' + scoreCls(score) + '">' + score + '/10</div>';
+        html += '<div class="dim-bar"><div class="dim-fill" style="width:' + (score * 10) + '%;background:' + barColor(score) + '"></div></div>';
+        html += '</div>';
+    });
+    // Confidence + Overall
+    html += '<div class="dim-cell">';
+    html += '<div class="dim-lab">Confidence</div>';
+    html += '<div class="dim-val ' + (dims.confidence >= 80 ? 'good' : dims.confidence >= 50 ? 'mid' : 'bad') + '">' + (dims.confidence || 0) + '%</div>';
+    html += '<div class="dim-bar"><div class="dim-fill" style="width:' + (dims.confidence || 0) + '%;background:var(--cyan)"></div></div>';
+    html += '</div>';
+    html += '</div>';
+
+    // Overall score
+    html += '<div style="text-align:center;margin-bottom:10px;">';
+    html += '<span style="font-family:var(--display);font-weight:700;font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.08em;">Overall: </span>';
+    html += '<span style="font-family:var(--display);font-weight:700;font-size:18px;color:' + barColor(dims.overall || 0) + '">' + (dims.overall || 0) + '/10</span>';
+    html += '</div>';
+
+    // Reasons (Priority 7 — Why Scores)
+    html += '<div class="dim-reasons">';
+    dimsList.forEach(d => {
+        const obj = dims[d.key] || {};
+        const reasons = obj.reasons || [];
+        if (!reasons.length) return;
+        html += '<div class="dim-reason-group">';
+        html += '<div class="group-title">' + d.label + ' — ' + (obj.score || 0) + '/10</div>';
+        reasons.forEach(r => {
+            const isEasy = r.easy === true;
+            html += '<div class="dim-reason-item">';
+            html += '<span class="reason-icon ' + (isEasy ? 'easy' : 'hard') + '">' + (isEasy ? '✓' : '+' + r.points) + '</span>';
+            html += '<span class="reason-text">' + r.factor + '</span>';
+            if (!isEasy) html += '<span class="reason-pts">+' + r.points + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 3: Provider Family renderer (enhanced) ----------
+function renderProviderFamily(pi) {
+    const box = $('providerFamilyBox');
+    const fam = pi.providerFamily || {};
+    const primary = fam.primary || { name: 'Unknown', extractor: null, confidence: 0, evidence: [], player: null };
+    const all = fam.all || [];
+    const playerDetected = fam.playerDetected || null;
+
+    let html = '';
+    html += '<div class="family-primary">';
+    html += '<div class="family-name">' + primary.name + '</div>';
+    if (primary.extractor) {
+        html += '<div class="family-extractor">Known extractor: <b>' + primary.extractor + '</b></div>';
+    } else {
+        html += '<div class="family-extractor" style="color:var(--amber)">No known extractor — build new</div>';
+    }
+    if (primary.player || playerDetected) {
+        html += '<div class="family-extractor" style="margin-top:3px">Player: <b style="color:var(--cyan)">' + (primary.player || playerDetected) + '</b></div>';
+    }
+    html += '<div class="family-confidence">';
+    html += '<div class="conf-bar"><div class="conf-fill" style="width:' + primary.confidence + '%"></div></div>';
+    html += '<div class="conf-label">Confidence: ' + primary.confidence + '%</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="family-alt">';
+    if (all.length > 0) {
+        all.forEach(f => {
+            html += '<div class="family-alt-item">';
+            html += '<span class="fname">' + f.name + '</span>';
+            html += '<span class="fconf">' + f.confidence + '%</span>';
+            if (f.extractor) html += '<span class="fext">' + f.extractor + '</span>';
+            html += '</div>';
+        });
+    } else {
+        html += '<div class="family-alt-item"><span class="fname" style="color:var(--ink-faint)">No known provider signatures matched</span></div>';
+    }
+    if (primary.evidence && primary.evidence.length) {
+        html += '<div class="family-evidence">Evidence: ' + primary.evidence.join(' · ') + '</div>';
+    }
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 2: Split Replayability renderer ----------
+function renderSplitReplayability(pi) {
+    const box = $('splitReplayBox');
+    const sr = pi.splitReplayability || {};
+    if (!sr.mediaType) {
+        box.innerHTML = '<div class="empty">No replayability data available.</div>';
+        return;
+    }
+
+    const ynCls = (v) => v ? 'good' : 'bad';
+    let html = '<div class="split-replay-grid">';
+    html += '<div class="sr-cell"><div class="sr-lab">Playable Stream</div><div class="sr-val ' + ynCls(sr.playableStream) + '">' + (sr.playableStream ? 'YES' : 'NO') + '</div></div>';
+    html += '<div class="sr-cell"><div class="sr-lab">Media Type</div><div class="sr-val" style="color:var(--cyan)">' + (sr.mediaType || '—') + '</div></div>';
+    html += '<div class="sr-cell"><div class="sr-lab">Replay Method</div><div class="sr-val ' + (sr.replayMethod === 'Native HTTP' ? 'good' : 'mid') + '">' + (sr.replayMethod || '—') + '</div></div>';
+    html += '<div class="sr-cell"><div class="sr-lab">Native HTTP Replay</div><div class="sr-val ' + ynCls(sr.nativeHttpReplay) + '">' + (sr.nativeHttpReplay ? 'YES' : 'NO') + '</div></div>';
+    html += '<div class="sr-cell"><div class="sr-lab">Reason</div><div class="sr-val" style="font-size:10px;color:var(--ink-dim)">' + (sr.reason || '—') + '</div></div>';
+    html += '</div>';
+
+    if (sr.reason && !sr.nativeHttpReplay) {
+        html += '<div class="sr-reason">⚠ ' + sr.reason + '</div>';
+    }
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 4: Token Source Chain renderer (enhanced with provenance) ----------
+function renderTokenChain(pi) {
+    const box = $('tokenChainBox');
+    const chains = pi.tokenSourceChain || [];
+
+    if (!chains.length) {
+        box.innerHTML = '<div class="empty">No token source chain captured.</div>';
+        return;
+    }
+
+    let html = '';
+    chains.forEach(group => {
+        html += '<div class="token-chain-group">';
+        html += '<div class="token-chain-title">';
+        html += '<span class="badge">' + (group.playableType || 'unknown').toUpperCase() + '</span>';
+        if (group.pageUrl) html += ' <span style="color:var(--ink-faint);font-size:9.5px">' + group.pageUrl.slice(0, 60) + (group.pageUrl.length > 60 ? '…' : '') + '</span>';
+        html += '</div>';
+        (group.chain || []).forEach(step => {
+            html += '<div class="token-step">';
+            html += '<span class="step-num">' + String(step.step).padStart(2, '0') + '</span>';
+            html += '<div><div class="step-desc">' + step.description + '</div>';
+            html += '<div class="step-detail">' + (step.detail || '') + '</div></div>';
+            html += '</div>';
+        });
+        // Provenance metadata (Priority 4 enhancement)
+        if (group.provenance) {
+            const p = group.provenance;
+            html += '<div class="token-provenance">';
+            html += '<div class="token-prov-item"><div class="prov-lab">Token Source</div><div class="prov-val" style="color:var(--cyan)">' + (p.tokenSource || '—') + '</div></div>';
+            html += '<div class="token-prov-item"><div class="prov-lab">Lifetime</div><div class="prov-val" style="color:var(--amber)">' + (p.lifetime || '—') + '</div></div>';
+            html += '<div class="token-prov-item"><div class="prov-lab">Generated By</div><div class="prov-val" style="color:var(--violet)">' + (p.generatedBy || '—') + '</div></div>';
+            html += '<div class="token-prov-item"><div class="prov-lab">Replay</div><div class="prov-val" style="color:' + (p.replay === 'YES' ? 'var(--green)' : 'var(--red)') + '">' + (p.replay || '—') + '</div></div>';
+            html += '</div>';
+        }
+        html += '</div>';
+    });
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 5: Request Importance renderer ----------
+function renderRequestImportance(pi) {
+    const box = $('requestImportanceBox');
+    const ri = pi.requestImportance || {};
+    const critical = ri.critical || [];
+    const ignored = ri.ignored || [];
+
+    let html = '';
+    // Critical requests
+    html += '<div class="ri-critical">';
+    html += '<h4>Critical Requests (' + critical.length + ' of ' + (ri.totalRequests || 0) + ')</h4>';
+    if (critical.length) {
+        critical.forEach(c => {
+            html += '<div class="ri-item">';
+            html += '<span class="ri-num">' + c.num + '</span>';
+            html += '<span class="ri-method">' + c.method + '</span>';
+            html += '<span class="ri-path">' + c.template + '</span>';
+            html += '</div>';
+        });
+    } else {
+        html += '<div class="empty">No critical requests identified.</div>';
+    }
+    html += '</div>';
+
+    // Ignored categories
+    html += '<div class="ri-ignored">';
+    html += '<h4>Ignored (' + (ri.totalRequests - ri.criticalCount) + ' requests)</h4>';
+    if (ignored.length) {
+        html += '<div class="ri-ignored-tags">';
+        ignored.forEach(ig => {
+            html += '<span class="ri-tag">' + ig.category + '<span class="ri-count">×' + ig.count + '</span></span>';
+        });
+        html += '</div>';
+    } else {
+        html += '<div class="empty">No noise detected.</div>';
+    }
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 6: Request Templates renderer ----------
+function renderRequestTemplates(pi) {
+    const box = $('requestTemplatesBox');
+    const templates = pi.requestTemplates || [];
+
+    if (!templates.length) {
+        box.innerHTML = '<div class="empty">No reusable request templates extracted.</div>';
+        return;
+    }
+
+    let html = '';
+    templates.forEach((tpl, idx) => {
+        const methodCls = tpl.method.toLowerCase();
+        html += '<div class="req-tpl" data-idx="' + idx + '">';
+        html += '<div class="req-tpl-head">';
+        html += '<span class="method ' + methodCls + '">' + tpl.method + '</span>';
+        html += '<span class="tpl-path">' + tpl.template + '</span>';
+        html += '<span class="tpl-cat">' + (tpl.category || '') + '</span>';
+        html += '<span class="tpl-toggle">▸</span>';
+        html += '</div>';
+        html += '<div class="req-tpl-body">';
+        if (tpl.headers && Object.keys(tpl.headers).length) {
+            html += '<div class="req-tpl-section"><div class="sec-title">Headers</div>';
+            for (const hk in tpl.headers) {
+                html += '<div class="req-tpl-kv"><b>' + hk + ':</b> ' + tpl.headers[hk] + '</div>';
+            }
+            html += '</div>';
+        }
+        if (tpl.requestBody) {
+            html += '<div class="req-tpl-section"><div class="sec-title">Request Body</div>';
+            html += '<div class="req-tpl-response">' + tpl.requestBody + '</div>';
+            html += '</div>';
+        }
+        if (tpl.responseSummary) {
+            html += '<div class="req-tpl-section"><div class="sec-title">Returns (status ' + (tpl.responseStatus || '?') + ')</div>';
+            html += '<div class="req-tpl-response">' + tpl.responseSummary + '</div>';
+            html += '</div>';
+        }
+        if (tpl.pagesObserved && tpl.pagesObserved.length) {
+            html += '<div class="req-tpl-section"><div class="sec-title">Observed on</div>';
+            html += '<div class="req-tpl-kv">' + tpl.pagesObserved.slice(0, 3).join('<br>') + (tpl.pagesObserved.length > 3 ? '<br>… +' + (tpl.pagesObserved.length - 3) + ' more' : '') + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+    });
+
+    box.innerHTML = html;
+
+    box.querySelectorAll('.req-tpl-head').forEach(head => {
+        head.addEventListener('click', () => {
+            head.parentElement.classList.toggle('open');
+        });
+    });
+}
+
+// ---------- Priority 8: Confidence Scores renderer ----------
+function renderConfidenceScores(pi) {
+    const box = $('confidenceScoresBox');
+    const scores = pi.confidenceScores || {};
+    const keys = Object.keys(scores);
+
+    if (!keys.length) {
+        box.innerHTML = '<div class="empty">No confidence data available.</div>';
+        return;
+    }
+
+    let html = '<div class="conf-grid">';
+    keys.forEach(key => {
+        const val = scores[key];
+        const cls = val >= 80 ? 'high' : val >= 40 ? 'med' : 'low';
+        const barCol = val >= 80 ? 'var(--green)' : val >= 40 ? 'var(--amber)' : 'var(--red)';
+        html += '<div class="conf-item">';
+        html += '<div class="conf-lab">' + key + '</div>';
+        html += '<div class="conf-val ' + cls + '">' + val + '%</div>';
+        html += '<div class="conf-bar"><div class="conf-fill" style="width:' + val + '%;background:' + barCol + '"></div></div>';
+        html += '</div>';
+    });
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 10: Implementation Estimate renderer ----------
+function renderImplEstimate(pi) {
+    const box = $('implEstimateBox');
+    const est = pi.implementationEstimate || {};
+    if (!est.lines) {
+        box.innerHTML = '<div class="empty">No implementation estimate available.</div>';
+        return;
+    }
+
+    let html = '';
+    // Lines card
+    html += '<div class="impl-card">';
+    html += '<div class="impl-num">' + est.lines + '</div>';
+    html += '<div class="impl-lab">Est. Lines</div>';
+    html += '</div>';
+    // Time card
+    html += '<div class="impl-card">';
+    html += '<div class="impl-num" style="font-size:18px">' + (est.timeStr || '—') + '</div>';
+    html += '<div class="impl-lab">Est. Build Time</div>';
+    html += '</div>';
+    // Dependencies
+    html += '<div class="impl-deps">';
+    html += '<h4>Dependencies</h4>';
+    (est.dependencies || []).forEach(dep => {
+        html += '<span class="impl-dep-item">' + dep + '</span>';
+    });
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 11: Provider Comparison renderer ----------
+function renderProviderComparison(pi) {
+    const box = $('providerCompareBox');
+    const comp = pi.providerComparison || {};
+    if (!comp.closestMatch) {
+        box.innerHTML = '<div class="empty">No provider comparison available.</div>';
+        return;
+    }
+
+    let html = '';
+    // Match card
+    html += '<div class="pc-match">';
+    html += '<div class="pc-name">' + comp.closestMatch + '</div>';
+    html += '<div class="pc-sim">' + comp.similarity + '%</div>';
+    html += '<div class="pc-sim-lab">Similarity</div>';
+    html += '<div style="margin-top:6px;font-size:9px;color:var(--ink-faint);position:relative">Shared: ' + (comp.sharedApis || '—') + '</div>';
+    html += '</div>';
+
+    // Details
+    html += '<div class="pc-details">';
+    html += '<div class="pc-rec"><b>Recommendation:</b> ' + (comp.recommendation || '—') + '</div>';
+    if (comp.reuse && comp.reuse.length) {
+        html += '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:4px">Reuse</div>';
+        html += '<div class="pc-tags">';
+        comp.reuse.forEach(r => { html += '<span class="pc-tag reuse">' + r + '</span>'; });
+        html += '</div>';
+    }
+    if (comp.rewrite && comp.rewrite.length) {
+        html += '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin:6px 0 4px">Rewrite</div>';
+        html += '<div class="pc-tags">';
+        comp.rewrite.forEach(r => { html += '<span class="pc-tag rewrite">' + r + '</span>'; });
+        html += '</div>';
+    }
+    html += '</div>';
+
+    box.innerHTML = html;
+}
+
+// ---------- Priority 12: Final Recommendation renderer ----------
+function renderFinalRecommendation(pi) {
+    const box = $('finalRecBox');
+    const rec = pi.finalRecommendation || {};
+    if (!rec.stars) {
+        box.innerHTML = '<div class="empty">No recommendation available.</div>';
+        return;
+    }
+
+    let html = '';
+    // Stars
+    html += '<div class="fr-stars">';
+    for (let i = 1; i <= 5; i++) {
+        html += '<span class="' + (i <= rec.stars ? 'star-on' : 'star-off') + '">★</span>';
+    }
+    html += '</div>';
+
+    // Grid
+    const diffCls = rec.difficulty <= 3 ? 'good' : rec.difficulty <= 6 ? 'mid' : 'bad';
+    const maintCls = rec.maintenance <= 3 ? 'good' : rec.maintenance <= 6 ? 'mid' : 'bad';
+    html += '<div class="fr-grid">';
+    html += '<div class="fr-item"><div class="fr-lab">Difficulty</div><div class="fr-val ' + diffCls + '">' + rec.difficulty + '/10</div></div>';
+    html += '<div class="fr-item"><div class="fr-lab">Maintenance</div><div class="fr-val ' + maintCls + '">' + rec.maintenance + '/10</div></div>';
+    html += '<div class="fr-item"><div class="fr-lab">Build Time</div><div class="fr-val" style="color:var(--cyan)">' + (rec.estimatedBuildTime || '—') + '</div></div>';
+    html += '<div class="fr-item"><div class="fr-lab">Reusable Code</div><div class="fr-val" style="color:var(--violet)">' + (rec.reusableCode || '—') + '</div></div>';
+    html += '<div class="fr-item"><div class="fr-lab">Extractor</div><div class="fr-val" style="font-size:11px;color:' + (rec.existingExtractor !== 'None' ? 'var(--green)' : 'var(--amber)') + '">' + (rec.existingExtractor || 'None') + '</div></div>';
+    html += '<div class="fr-item"><div class="fr-lab">Recommended</div><div class="fr-val ' + (rec.recommended ? 'good' : 'bad') + '">' + (rec.recommended ? 'YES' : 'NO') + '</div></div>';
+    html += '</div>';
+
+    // Reason
+    html += '<div class="fr-reason">' + (rec.reason || '') + '</div>';
+
+    // Recommended banner
+    html += '<div class="fr-recommended ' + (rec.recommended ? 'yes' : 'no') + '">' + (rec.recommended ? '✓ RECOMMENDED — Worth implementing' : '✘ NOT RECOMMENDED — High complexity') + '</div>';
+
+    box.innerHTML = html;
+}
+
 function renderReplay(pi) {
     const rt = pi.replayTest || {};
     let html = '<div class="verdict-head ' + (rt.replayable ? '' : '') + '" style="color:' + (rt.replayable ? 'var(--green)' : 'var(--red)') + '">' + (rt.verdict || '—') + '</div>';
@@ -136,11 +547,6 @@ function renderChecklist(found) {
         box.appendChild(c);
     });
 }
-function animateScore(target) {
-    const el = $('scoreNum'); let cur = 0;
-    const step = Math.max(1, Math.round(target / 30));
-    const iv = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(iv); } el.textContent = cur; }, 24);
-}
 function renderFlags(list, el, isRed) {
     el.innerHTML = '';
     if (!list || !list.length) { el.innerHTML = '<div class="empty">none detected</div>'; return; }
@@ -180,31 +586,26 @@ function showComplete(report) {
     $('domainReadout').textContent = domain;
 
     const pi = report.providerIntelligence || {};
+
+    // Render all sections in order
     renderSignature(pi);
+    renderDimensionalScores(pi);
+    renderProviderFamily(pi);
+    renderSplitReplayability(pi);
     renderReplay(pi);
+    renderTokenChain(pi);
+    renderRequestImportance(pi);
     renderChain(pi);
+    renderRequestTemplates(pi);
     renderRecipe(pi);
+    renderConfidenceScores(pi);
+    renderImplEstimate(pi);
+    renderProviderComparison(pi);
+    renderFinalRecommendation(pi);
     renderStability(pi);
     renderJsDeps(pi);
 
     const s = report.summary || {};
-    animateScore(s.compatibilityScore || 0);
-    const v = (pi.providerSignature) || {};
-    $('verdictHead').textContent = (v.providerType || 'Analyzed');
-    $('verdictDiff').textContent = v.difficulty != null ? '· difficulty ' + v.difficulty + '/10' : '';
-    $('verdictSum').textContent = (s.compatibilityReasons || []).join('\n');
-    const kv = $('kvRow'); kv.innerHTML = '';
-    const addKV = (label, val, cls) => {
-        const sp = document.createElement('span');
-        sp.className = 'kv' + (cls ? ' ' + cls : '');
-        sp.innerHTML = label + ' <b>' + val + '</b>';
-        kv.appendChild(sp);
-    };
-    addKV('final', v.finalOutput || '—');
-    addKV('replay', v.replayable ? 'YES' : 'NO', v.replayable ? 'good' : 'warn');
-    addKV('headers', (v.requiredHeaders || []).length ? v.requiredHeaders.join(', ') : 'none');
-    addKV('CDNs', (report.thirdPartyCDNs || []).length);
-
     renderChecklist(Object.keys(report.representativePages || {}));
     $('statPages').textContent = s.pagesAnalyzed || 0;
     $('statReqs').textContent = (report.networkAnalysis && report.networkAnalysis.totalRequests) || 0;
