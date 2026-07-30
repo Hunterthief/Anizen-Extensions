@@ -1,9 +1,8 @@
 // background.js — Media Site Analyzer v3.0.0 (network-first engine + provider intelligence)
-const MAX_BODY = 51200;
+const MAX_BODY = 204800;
 const CANONICAL_SEARCH_PARAMS = ['q', 'query', 'search', 'keyword', 's', 'k', 'text'];
 const VARIANT_CAPABLE_TYPES = ['Catalog', 'Genre', 'Latest', 'Popular', 'Schedule'];
 const MAX_VARIANTS = 3;
-
 // --- Request Layer Classification ---
 const LAYER_1_DISCOVERY = ['Search API', 'Anime Details API', 'Episodes API'];
 const LAYER_2_RESOLUTION = ['Servers API', 'Proxy API', 'Embed'];
@@ -11,8 +10,7 @@ const LAYER_3_PLAYBACK = ['Manifest', 'Video'];
 const LAYER_4_METADATA = ['Comments', 'Subtitle API', 'Authentication', 'General API'];
 const LAYER_5_ASSETS = ['Analytics', 'Advertisement', 'Asset', 'Third-party Asset', 'Script', 'Third-party Script', 'Cloudflare', 'Subtitle', 'Other'];
 const MEDIA_PIPELINE = [...LAYER_1_DISCOVERY, ...LAYER_2_RESOLUTION, ...LAYER_3_PLAYBACK];
-
-// --- Granular sub-layer classification (Feedback item 1) ---
+// --- Granular sub-layer classification ---
 const SUB_LAYERS = {
     'Search API': 'Application API',
     'Anime Details API': 'Application API',
@@ -36,7 +34,6 @@ const SUB_LAYERS = {
     'Subtitle': 'Media API',
     'Other': 'Other'
 };
-
 // --- Provider Family Signatures ---
 const PROVIDER_FAMILIES = [
     {
@@ -46,9 +43,9 @@ const PROVIDER_FAMILIES = [
         confidence: 0,
         signals: {
             domains: ['megacloud', 'megacloud.tv', 'megacloud.to', 'rapid-cloud', 'rapidrame'],
-            urlPatterns: [/megacloud/i, /rapid-cloud/i, /rapidrame/i, /\/embed[-\d]*\//i, /\/e\//i],
+            urlPatterns: [/megacloud/i, /rapid-cloud/i, /rapidrame/i, /embed[-\d]/i, /\/e\//i],
             jsPatterns: ['megacloud', 'rapid-cloud'],
-            responsePatterns: [/sources.*file.*type.*hls/i, /"sources":\s*\[/i],
+            responsePatterns: [/sources.*file.*type.*hls/i, /"sources"\s*:\s*\[/i],
             headers: [],
             player: null
         }
@@ -60,7 +57,7 @@ const PROVIDER_FAMILIES = [
     confidence: 0,
     signals: {
         domains: ['rabbitstream', 'rabbitstream.net', 'rabbitstream.to'],
-        urlPatterns: [/rabbitstream/i, /\/embed[-\d]*\//i],
+        urlPatterns: [/rabbitstream/i, /embed[-\d]/i],
         jsPatterns: ['rabbitstream'],
         responsePatterns: [/sources.*file/i],
         headers: [],
@@ -84,7 +81,7 @@ const PROVIDER_FAMILIES = [
 {
     id: 'vidstack',
     name: 'Vidstack',
-    extractor: null,
+    extractor: null ,
     confidence: 0,
     signals: {
         domains: ['vidstack', 'vidstack.io'],
@@ -112,11 +109,11 @@ const PROVIDER_FAMILIES = [
 {
     id: 'vidstreaming',
     name: 'VidStreaming',
-    extractor: 'VidStreamingExtractor.kt',
+    extractor:  'VidStreamingExtractor.kt',
     confidence: 0,
     signals: {
         domains: ['vidstreaming', 'vidstreaming.io'],
-        urlPatterns: [/vidstreaming/i, /streaming\.php/i],
+        urlPatterns: [/vidstreaming/i, /streaming.php/i],
         jsPatterns: ['vidstreaming'],
         responsePatterns: [],
         headers: [],
@@ -130,7 +127,7 @@ const PROVIDER_FAMILIES = [
     confidence: 0,
     signals: {
         domains: ['gogocdn', 'gogoanime', 'gogo-load', 'playgo', 'anihdplay'],
-        urlPatterns: [/gogocdn/i, /gogoanime/i, /streaming\.php/i, /\/loadserver\.php/i],
+        urlPatterns: [/gogocdn/i, /gogoanime/i, /streaming.php/i, /loadserver.php/i],
         jsPatterns: ['gogocdn', 'gogo'],
         responsePatterns: [/gogocdn/i],
         headers: [],
@@ -144,7 +141,7 @@ const PROVIDER_FAMILIES = [
     confidence: 0,
     signals: {
         domains: ['mp4upload', 'mp4upload.com'],
-        urlPatterns: [/mp4upload/i, /\/embed-/i],
+        urlPatterns: [/mp4upload/i, /embed-/i],
         jsPatterns: ['mp4upload'],
         responsePatterns: [/mp4upload/i],
         headers: [],
@@ -159,7 +156,7 @@ const PROVIDER_FAMILIES = [
     signals: {
         domains: ['doodstream', 'dood.to', 'dood.so', 'dood.ws', 'dood.pm'],
         urlPatterns: [/dood/i, /\/e\//i, /\/d\//i],
-        jsPatterns: ['dood', 'doodstream'],
+        jsPatterns:  ['dood', 'doodstream'],
         responsePatterns: [/dood/i],
         headers: [],
         player: null
@@ -214,8 +211,8 @@ const PROVIDER_FAMILIES = [
     confidence: 0,
     signals: {
         domains: [],
-        urlPatterns: [/\/_next\//i, /\/api\/trpc\//i],
-        jsPatterns: ['__NEXT_DATA__', 'next/router'],
+        urlPatterns: [/_next\//i, /api\/trpc\//i],
+        jsPatterns: ['NEXT_DATA', 'next/router'],
         responsePatterns: [/"pageProps"/i],
         headers: [],
         player: null
@@ -228,15 +225,14 @@ const PROVIDER_FAMILIES = [
     confidence: 0,
     signals: {
         domains: [],
-        urlPatterns: [/\/_nuxt\//i, /\/__nuxt/i],
-        jsPatterns: ['__NUXT__', 'nuxt'],
-        responsePatterns: [/"__NUXT__"/i],
+        urlPatterns: [/_nuxt\//i, /__nuxt/i],
+        jsPatterns: ['NUXT', 'nuxt'],
+        responsePatterns: [/"NUXT"/i],
         headers: [],
         player: null
     }
 }
             ];
-
             // --- Known Providers for Comparison ---
             const KNOWN_PROVIDERS = [
                 {
@@ -282,7 +278,6 @@ const PROVIDER_FAMILIES = [
     lines: 240
 }
             ];
-
             function normalizeUrl(rawUrl) {
                 try {
                     const u = new URL(rawUrl);
@@ -291,7 +286,6 @@ const PROVIDER_FAMILIES = [
                     return u.href;
                 } catch (e) { return null; }
             }
-
             function getRouteTemplate(urlStr) {
                 try {
                     const u = new URL(normalizeUrl(urlStr));
@@ -309,7 +303,6 @@ const PROVIDER_FAMILIES = [
                     return '/' + templated.join('/');
                 } catch (e) { return urlStr; }
             }
-
             function getQueryParams(urlStr) {
                 try {
                     const u = new URL(normalizeUrl(urlStr));
@@ -318,7 +311,6 @@ const PROVIDER_FAMILIES = [
                     return params;
                 } catch (e) { return {}; }
             }
-
             function tryDecodeProxy(normUrl) {
                 try {
                     const u = new URL(normUrl);
@@ -327,7 +319,6 @@ const PROVIDER_FAMILIES = [
                     return JSON.parse(atob(payload));
                 } catch (e) { return null; }
             }
-
             function extractRequestBody(rb) {
                 try {
                     if (!rb) return null;
@@ -342,7 +333,6 @@ const PROVIDER_FAMILIES = [
                 } catch (e) {}
                 return null;
             }
-
             class SiteExplorer {
                 constructor(startUrl) {
                     this.startUrl = startUrl;
@@ -365,37 +355,125 @@ const PROVIDER_FAMILIES = [
                     this.activeTabId = null;
                     this.currentPageUrl = null;
                     this.openedPredictedCounts = {};
+                    this.bodyCaptureErrors = [];
+                    this.bodyCaptureCount = 0;
+                    this.allIntercepted = []; // <-- ADDED: Accumulator for final reconciliation pass
                 }
-
-                // ---------- network lifecycle ----------
+                CAPTURE_MIMES = [
+                    'application/json', 'application/vnd.apple.mpegurl', 'application/x-mpegurl',
+                    'audio/x-mpegurl', 'application/dash+xml', 'text/html', 'text/plain'
+                ];
+                CAPTURE_URL_PATTERNS = [
+                    '/api/', '.m3u8', '.mpd', '.mp4', '/stream', '/video', '/source', '/server', '/embed', '/resolve', '/proxy', '/pipe'
+                ];
+                shouldCaptureBody(url, mimeType) {
+                    const lowerUrl = (url || '').toLowerCase();
+                    const lowerMime = (mimeType || '').toLowerCase();
+                    if (this.CAPTURE_MIMES.some(m => lowerMime.includes(m))) return true;
+                    if (this.CAPTURE_URL_PATTERNS.some(p => lowerUrl.includes(p))) return true;
+                    return false;
+                }
+                attachBodyFilter(requestId, url, mimeType) {
+                    if (!this.shouldCaptureBody(url, mimeType)) return;
+                    if (!browser.webRequest || typeof browser.webRequest.filterResponseData !== 'function') return;
+                    try {
+                        const filter = browser.webRequest.filterResponseData(requestId);
+                        const chunks = [];
+                        let totalSize = 0;
+                        let aborted = false; // Flag to stop saving to memory if it exceeds 1MB
+                        filter.ondata = (event) => {
+                            totalSize += event.data.byteLength;
+                            // 1MB Hard Limit Protection: If it exceeds 1MB, stop saving to memory.
+                            // We still call filter.write() so the browser can render/download the file normally.
+                            if (!aborted && totalSize <= MAX_BODY) {
+                                // IMPORTANT: Clone the ArrayBuffer using Uint8Array, otherwise the browser
+                                // might recycle the memory buffer before onstop fires, resulting in corrupted data.
+                                chunks.push(new Uint8Array(event.data));
+                            } else {
+                                aborted = true;
+                            }
+                            filter.write(event.data);
+                        };
+                        filter.onstop = () => {
+                            try {
+                                if (chunks.length === 0) {
+                                    filter.disconnect();
+                                    return;
+                                }
+                                let capturedSize = 0;
+                                for (const c of chunks) capturedSize += c.byteLength;
+                                const combined = new Uint8Array(capturedSize);
+                                let offset = 0;
+                                for (const c of chunks) {
+                                    combined.set(c, offset);
+                                    offset += c.byteLength;
+                                }
+                                // Decode safely (fatal: false prevents crashes on weird binary characters)
+                                const body = new TextDecoder('utf-8', { fatal: false }).decode(combined).substring(0, MAX_BODY);
+                                this.bodyCaptureCount++;
+                                this.mergeBodyByUrl(url, body, totalSize > MAX_BODY);
+                            } catch (e) {
+                                this.bodyCaptureErrors.push({ url: url.slice(0, 100), error: e.message });
+                            } finally {
+                                // CORRECT API METHOD (replaces filter.close())
+                                filter.disconnect();
+                            }
+                        };
+                        filter.onerror = () => {
+                            this.bodyCaptureErrors.push({ url: url.slice(0, 100), error: 'filter.onerror' });
+                            try {
+                                // CORRECT API METHOD
+                                filter.disconnect();
+                            } catch (e) {}
+                        };
+                    } catch (e) {
+                        this.bodyCaptureErrors.push({ url: url.slice(0, 100), error: 'attach: ' + e.message });
+                    }
+                }
+                mergeBodyByUrl(url, body, truncated) {
+                    if (!body) return;
+                    const normUrl = normalizeUrl(url);
+                    if (!normUrl) return;
+                    for (let i = this.rawRequests.length - 1; i >= 0; i--) {
+                        const r = this.rawRequests[i];
+                        if ((r.url === normUrl || r.rawUrl === url) && !r.body) {
+                            r.body = body;
+                            r.truncated = truncated;
+                            const cls = this.classifyRequest(r);
+                            if (cls.category !== r.category) {
+                                r.category = cls.category;
+                                r.playable = cls.playable || r.playable;
+                                r.layer = this.classifyLayer(cls.category);
+                                r.subLayer = SUB_LAYERS[cls.category] || 'Other';
+                                r.apiRole = this.classifyApiRole(cls, r);
+                            }
+                            return;
+                        }
+                    }
+                    for (const id of Object.keys(this.pendingById)) {
+                        const p = this.pendingById[id];
+                        if ((p.url === normUrl || p.rawUrl === url) && !p.body) {
+                            p.body = body;
+                            p.truncated = truncated;
+                            return;
+                        }
+                    }
+                }
                 onRequestStarted(details) {
                     const normUrl = normalizeUrl(details.url);
                     if (!normUrl) return;
                     this.pendingById[details.requestId] = {
-                        requestId: details.requestId,
-                        url: normUrl,
-                        rawUrl: details.url,
-                        method: details.method,
-                        resourceType: details.type,
-                        pageUrl: this.currentPageUrl,
-                        startTime: details.timeStamp,
-                        requestBody: extractRequestBody(details.requestBody),
-                        requestHeaders: {},
-                        responseHeaders: {},
-                        status: null,
-                        redirectURL: null,
-                        body: null,
-                        durationMs: null,
-                        error: null
+                        requestId: details.requestId, url: normUrl, rawUrl: details.url, method: details.method,
+                        resourceType: details.type, pageUrl: this.currentPageUrl, startTime: details.timeStamp,
+                        requestBody: extractRequestBody(details.requestBody), requestHeaders: {}, responseHeaders: {},
+                        status: null, redirectURL: null, body: null, durationMs: null, error: null
                     };
                 }
-
                 onRequestHeaders(details) {
                     const e = this.pendingById[details.requestId];
                     if (!e) return;
                     (details.requestHeaders || []).forEach(h => { e.requestHeaders[h.name.toLowerCase()] = h.value; });
                 }
-
                 onResponseHeaders(details) {
                     const e = this.pendingById[details.requestId];
                     if (!e) return;
@@ -404,8 +482,11 @@ const PROVIDER_FAMILIES = [
                     if (details.statusCode >= 300 && details.statusCode < 400 && e.responseHeaders['location']) {
                         e.redirectURL = e.responseHeaders['location'];
                     }
+                    const contentType = e.responseHeaders['content-type'] || '';
+                    if (details.tabId === this.activeTabId) {
+                        this.attachBodyFilter(details.requestId, e.url, contentType);
+                    }
                 }
-
                 onRequestCompleted(details) {
                     const e = this.pendingById[details.requestId];
                     if (!e) return;
@@ -413,7 +494,6 @@ const PROVIDER_FAMILIES = [
                     delete this.pendingById[details.requestId];
                     this.finalizeRequest(e);
                 }
-
                 onRequestError(details) {
                     const e = this.pendingById[details.requestId];
                     if (!e) return;
@@ -422,7 +502,6 @@ const PROVIDER_FAMILIES = [
                     delete this.pendingById[details.requestId];
                     this.finalizeRequest(e);
                 }
-
                 finalizeRequest(e) {
                     this.rawRequests.push(e);
                     const cls = this.classifyRequest(e);
@@ -436,7 +515,8 @@ const PROVIDER_FAMILIES = [
                         this.networkDb[key] = { url: e.url, template: getRouteTemplate(e.url), method: e.method, type: e.resourceType, category: cls.category, purpose: cls.purpose, firstSeen: e.startTime, pages: [] };
                     }
                     if (e.pageUrl && !this.networkDb[key].pages.includes(e.pageUrl)) this.networkDb[key].pages.push(e.pageUrl);
-                    let host = ''; try { host = new URL(e.url).hostname; } catch (err) {}
+                    let host = '';
+                    try { host = new URL(e.url).hostname; } catch (err) {}
                     const isThirdParty = host && host !== this.domain && !host.endsWith('.' + this.domain);
                     if (isThirdParty && (e.url.includes('.m3u8') || e.url.includes('.mp4') || e.url.includes('/api/') || cls.category === 'Manifest' || cls.category === 'Video')) {
                         let cdn = this.thirdPartyCDNs.find(c => c.domain === host);
@@ -460,27 +540,96 @@ const PROVIDER_FAMILIES = [
                     }
                 }
 
+                // --- UPDATED: mergeIntercepted with fuzzy path matching and promotion of unmatched records ---
                 mergeIntercepted(intercepted) {
-                    (intercepted || []).forEach(ic => {
+                    if (!intercepted || !intercepted.length) return;
+                    let patched = 0, added = 0;
+
+                    for (const ic of intercepted) {
+                        if (!ic || !ic.url) continue;
                         const norm = normalizeUrl(ic.url);
-                        if (!norm) return;
+                        if (!norm) continue;
+                        const method = (ic.method || 'GET').toUpperCase();
+
+                        // --- Match pass 1: exact normalized URL + method ---
+                        let match = null;
                         for (let i = this.rawRequests.length - 1; i >= 0; i--) {
                             const r = this.rawRequests[i];
-                            if (r.url === norm && r.method === ic.method && !r.body) {
-                                r.body = ic.body;
-                                r.truncated = ic.truncated;
-                                if (ic.responseHeaders && Object.keys(ic.responseHeaders).length) r.responseHeaders = { ...r.responseHeaders, ...ic.responseHeaders };
-                                if (ic.status) r.status = ic.status;
-                                if (ic.durationMs) r.durationMs = ic.durationMs;
-                                const cls = this.classifyRequest(r);
-                                if (cls.category !== r.category) { r.category = cls.category; r.playable = cls.playable || r.playable; r.layer = this.classifyLayer(cls.category); r.subLayer = SUB_LAYERS[cls.category] || 'Other'; r.apiRole = this.classifyApiRole(cls, r); }
-                                break;
+                            if (r.method === method && (r.url === norm || r.rawUrl === ic.url)) { match = r; break; }
+                        }
+
+                        // --- Match pass 2: fuzzy — same path + method (survives query-string drift) ---
+                        if (!match) {
+                            let icPath = '';
+                            try { icPath = new URL(norm).pathname; } catch (e) {}
+                            if (icPath) {
+                                for (let i = this.rawRequests.length - 1; i >= 0; i--) {
+                                    const r = this.rawRequests[i];
+                                    if (r.method !== method) continue;
+                                    let rPath = '';
+                                    try { rPath = new URL(r.url).pathname; } catch (e) {}
+                                    if (rPath === icPath) { match = r; break; }
+                                }
                             }
                         }
-                    });
+
+                        if (match) {
+                            // Merge interceptor's depth into webRequest's skeleton
+                            if (ic.body && !match.body) {
+                                match.body = ic.body;
+                                match.truncated = ic.truncated || false;
+                                patched++;
+                            }
+                            if (ic.status && !match.status) match.status = ic.status;
+                            if (ic.requestBody && !match.requestBody) match.requestBody = ic.requestBody;
+                            if (ic.durationMs && !match.durationMs) match.durationMs = ic.durationMs;
+                            if (ic.responseHeaders && Object.keys(ic.responseHeaders).length) {
+                                match.responseHeaders = { ...(match.responseHeaders || {}), ...ic.responseHeaders };
+                            }
+                            if (ic.requestHeaders && Object.keys(ic.requestHeaders).length) {
+                                // webRequest headers win on conflict (they're authoritative), interceptor fills gaps
+                                match.requestHeaders = { ...ic.requestHeaders, ...(match.requestHeaders || {}) };
+                            }
+                            // Re-classify now that the body is present (lets us detect manifest/JSON by content)
+                            const cls = this.classifyRequest(match);
+                            if (cls.category !== match.category) {
+                                match.category = cls.category;
+                                match.playable = cls.playable || match.playable;
+                                match.layer = this.classifyLayer(cls.category);
+                                match.subLayer = SUB_LAYERS[cls.category] || 'Other';
+                                match.apiRole = this.classifyApiRole(cls, match);
+                            }
+                        } else {
+                            // --- No webRequest record: promote the interceptor entry to a first-class request ---
+                            // The interceptor already has url+method+status+headers+body+timing, so nothing is lost.
+                            const entry = {
+                                requestId: 'ic_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                                url: norm,
+                                rawUrl: ic.url,
+                                method: method,
+                                resourceType: ic.via === 'xhr' ? 'xmlhttprequest' : 'fetch',
+                                pageUrl: this.currentPageUrl,
+                                startTime: ic.t || Date.now(),
+                                requestBody: ic.requestBody || null,
+                                requestHeaders: ic.requestHeaders || {},
+                                responseHeaders: ic.responseHeaders || {},
+                                status: ic.status || null,
+                                redirectURL: null,
+                                body: ic.body || null,
+                                truncated: ic.truncated || false,
+                                durationMs: ic.durationMs || null,
+                                error: ic.error ? 'intercepted-error' : null,
+                                fromInterceptor: true
+                            };
+                            this.finalizeRequest(entry); // classifies + registers in networkDb/apiGroups
+                            added++;
+                        }
+                    }
+
+                    this.bodyCaptureCount += patched + added;
+                    console.log(`[MSA-bg] mergeIntercepted: patched ${patched} bodies, added ${added} interceptor-only requests (raw total: ${this.rawRequests.length})`);
                 }
 
-                // ---------- request classifier ----------
                 classifyRequest(e) {
                     let u; try { u = new URL(e.url); } catch (err) { return { category: 'Other', purpose: 'unknown' }; }
                     const path = u.pathname.toLowerCase();
@@ -524,8 +673,6 @@ const PROVIDER_FAMILIES = [
                     if (path.match(/\/(ads?|adservice|doubleclick)\b/)) return { category: 'Advertisement', purpose: 'Ads' };
                     return { category: 'General API', apiGroup: 'General', purpose: 'Unknown/fallback' };
                 }
-
-                // ---------- Layer classification ----------
                 classifyLayer(category) {
                     if (LAYER_1_DISCOVERY.includes(category)) return 1;
                     if (LAYER_2_RESOLUTION.includes(category)) return 2;
@@ -533,8 +680,6 @@ const PROVIDER_FAMILIES = [
                     if (LAYER_4_METADATA.includes(category)) return 4;
                     return 5;
                 }
-
-                // ---------- Feedback 3: API Role Classification ----------
                 classifyApiRole(cls, e) {
                     const cat = cls.category;
                     const path = (() => { try { return new URL(e.url).pathname.toLowerCase(); } catch (err) { return ''; } })();
@@ -557,12 +702,7 @@ const PROVIDER_FAMILIES = [
                     if (cat === 'General API') return 'Unknown';
                     return 'Other';
                 }
-
-                // ============================================================
-                // PROVIDER INTELLIGENCE LAYER
-                // ============================================================
                 NOISE_CATEGORIES = ['Analytics', 'Advertisement', 'Asset', 'Third-party Asset', 'Script', 'Third-party Script', 'Cloudflare', 'Subtitle', 'Subtitle API', 'Comments', 'Authentication', 'Other'];
-
                 getRequiredRequests() {
                     const required = [];
                     const supporting = [];
@@ -583,7 +723,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return { required, supporting };
                 }
-
                 buildDependencyGraph() {
                     const ORDER = { 'Search API': 1, 'Anime Details API': 2, 'Episodes API': 3, 'Servers API': 4, 'Proxy API': 5, 'Embed': 6, 'Manifest': 7, 'Video': 8 };
                     const { required } = this.getRequiredRequests();
@@ -603,8 +742,6 @@ const PROVIDER_FAMILIES = [
                     const ascii = chain.map(n => `${n.method} ${n.template}   [${n.apiRole}]`).join('\n    ↓\n');
                     return { chain, ascii, totalCaptured: this.rawRequests.length, requiredCount: chain.length };
                 }
-
-                // ---------- Feedback 4: Media Chain Detection ----------
                 buildMediaChain() {
                     const graph = this.buildDependencyGraph();
                     const roles = graph.chain.map(n => n.apiRole);
@@ -616,7 +753,6 @@ const PROVIDER_FAMILIES = [
                     const ascii = pipeline.join('\n    ↓\n');
                     return { pipeline, ascii, complete: pipeline.includes('Manifest') || pipeline.includes('Direct Media') };
                 }
-
                 analyzeTokens() {
                     const tokens = [];
                     const seen = new Set();
@@ -703,7 +839,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return tokens;
                 }
-
                 buildJsDependencyReport() {
                     const RELEVANT = ['m3u8', 'manifest', '.mpd', 'jwt', 'token', 'bearer', 'aes', 'cryptojs', 'decrypt', 'encrypt', 'fetch(', 'xmlhttprequest', 'websocket', 'atob(', 'btoa(', 'eval(', 'webassembly', 'hls'];
                     const report = [];
@@ -720,58 +855,42 @@ const PROVIDER_FAMILIES = [
                     }
                     return report;
                 }
-
-                // ---------- Feedback 2: Enhanced Framework Detection ----------
                 detectFramework() {
                     const frameworks = new Set();
                     const evidence = [];
-                    // From content.js detectors
                     this.results.forEach(r => {
                         if (r.frameworks && r.frameworks.result) {
                             r.frameworks.result.forEach(f => { frameworks.add(f); evidence.push(`DOM: ${f} detected on ${r.url}`); });
                         }
                     });
-                    // From JS filenames and patterns
                     const allJsNames = this.jsInventory.map(j => (j.name || '').toLowerCase());
                     const allJsUrls = this.jsInventory.map(j => (j.url || '').toLowerCase());
-                    const allJsPatterns = this.jsInventory.flatMap(j => j.patterns || []);
                     const allUrls = this.rawRequests.map(r => r.url.toLowerCase());
-
-                    // SvelteKit detection
-                    if (allUrls.some(u => u.includes('/_app/immutable/') || u.includes('.svelte-kit')) ||
-                        allJsNames.some(n => n.includes('svelte')) || allJsUrls.some(u => u.includes('svelte'))) {
+                    if (allUrls.some(u => u.includes('/_app/immutable/') || u.includes('.svelte-kit')) || allJsNames.some(n => n.includes('svelte')) || allJsUrls.some(u => u.includes('svelte'))) {
                         frameworks.add('SvelteKit'); evidence.push('JS/URL: SvelteKit patterns detected');
-                        }
-                        // Solid detection
-                        if (allJsNames.some(n => n.includes('solid')) || allJsUrls.some(u => u.includes('solid-js'))) {
-                            frameworks.add('Solid'); evidence.push('JS: Solid.js patterns detected');
-                        }
-                        // Astro detection
-                        if (allUrls.some(u => u.includes('/_astro/')) || allJsNames.some(n => n.includes('astro'))) {
-                            frameworks.add('Astro'); evidence.push('URL/JS: Astro patterns detected');
-                        }
-                        // Vue detection
-                        if (allJsNames.some(n => n.includes('vue')) || allJsUrls.some(u => u.includes('vue'))) {
-                            frameworks.add('Vue'); evidence.push('JS: Vue patterns detected');
-                        }
-                        // React detection
-                        if (allJsNames.some(n => n.includes('react')) || allJsUrls.some(u => u.includes('react'))) {
-                            frameworks.add('React'); evidence.push('JS: React patterns detected');
-                        }
-                        // Determine rendering mode
-                        let rendering = 'Unknown';
-                        if (frameworks.has('Next.js') || frameworks.has('Nuxt.js') || frameworks.has('SvelteKit') || frameworks.has('Astro')) {
-                            rendering = 'SSR + Hydration';
-                        } else if (frameworks.has('React') || frameworks.has('Vue') || frameworks.has('Solid')) {
-                            rendering = 'Client-rendered (SPA)';
-                        }
-
-                        const primary = frameworks.size > 0 ? Array.from(frameworks)[0] : 'Unknown';
-                        const confidence = frameworks.size > 0 ? (evidence.length >= 3 ? 99 : evidence.length >= 2 ? 90 : 75) : 0;
-
-                        return { frameworks: Array.from(frameworks), primary, confidence, rendering, evidence };
+                    }
+                    if (allJsNames.some(n => n.includes('solid')) || allJsUrls.some(u => u.includes('solid-js'))) {
+                        frameworks.add('Solid'); evidence.push('JS: Solid.js patterns detected');
+                    }
+                    if (allUrls.some(u => u.includes('/_astro/')) || allJsNames.some(n => n.includes('astro'))) {
+                        frameworks.add('Astro'); evidence.push('URL/JS: Astro patterns detected');
+                    }
+                    if (allJsNames.some(n => n.includes('vue')) || allJsUrls.some(u => u.includes('vue'))) {
+                        frameworks.add('Vue'); evidence.push('JS: Vue patterns detected');
+                    }
+                    if (allJsNames.some(n => n.includes('react')) || allJsUrls.some(u => u.includes('react'))) {
+                        frameworks.add('React'); evidence.push('JS: React patterns detected');
+                    }
+                    let rendering = 'Unknown';
+                    if (frameworks.has('Next.js') || frameworks.has('Nuxt.js') || frameworks.has('SvelteKit') || frameworks.has('Astro')) {
+                        rendering = 'SSR + Hydration';
+                    } else if (frameworks.has('React') || frameworks.has('Vue') || frameworks.has('Solid')) {
+                        rendering = 'Client-rendered (SPA)';
+                    }
+                    const primary = frameworks.size > 0 ? Array.from(frameworks)[0] : 'Unknown';
+                    const confidence = frameworks.size > 0 ? (evidence.length >= 3 ? 99 : evidence.length >= 2 ? 90 : 75) : 0;
+                    return { frameworks: Array.from(frameworks), primary, confidence, rendering, evidence };
                 }
-
                 buildReplayTest() {
                     const apiRequests = this.rawRequests.filter(r => (r.resourceType === 'xmlhttprequest' || r.resourceType === 'fetch') && !this.NOISE_CATEGORIES.includes(r.category));
                     const requiredHeaders = new Set();
@@ -802,7 +921,6 @@ const PROVIDER_FAMILIES = [
                         blockers
                     };
                 }
-
                 buildStabilityReport() {
                     const red = this.detectRedFlags();
                     const has = (flag) => red.some(f => f.flag === flag);
@@ -826,7 +944,6 @@ const PROVIDER_FAMILIES = [
                         usesBrowserFingerprint: has('Browser fingerprinting'), likelyMaintenance: maintenance
                     };
                 }
-
                 buildKotlinRecipe() {
                     const graph = this.buildDependencyGraph();
                     const steps = [];
@@ -850,8 +967,6 @@ const PROVIDER_FAMILIES = [
                     const optionalApis = supporting.filter(s => s.layer === 4);
                     return { steps, ascii, optionalApis };
                 }
-
-                // ---------- Feedback 5: Manifest Provenance ----------
                 buildManifestProvenance() {
                     const manifests = this.rawRequests.filter(r => r.category === 'Manifest');
                     const provenances = [];
@@ -879,8 +994,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return provenances;
                 }
-
-                // ---------- Feedback 6: Response Schema Inference ----------
                 inferResponseSchema(obj, depth = 0) {
                     if (depth > 3) return '…';
                     if (obj === null || obj === undefined) return 'null';
@@ -904,7 +1017,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return typeof obj;
                 }
-
                 buildResponseSchemas() {
                     const schemas = [];
                     const seen = new Set();
@@ -918,19 +1030,182 @@ const PROVIDER_FAMILIES = [
                             const parsed = JSON.parse(r.body);
                             seen.add(key);
                             schemas.push({
-                                method: r.method,
-                                template,
-                                category: r.category,
-                                apiRole: r.apiRole,
+                                method: r.method, template, category: r.category, apiRole: r.apiRole,
                                 schema: this.inferResponseSchema(parsed),
-                                         example: this.summarizeJson(parsed)
+                                         example: this.summarizeJson(parsed),
+                                         bodySample: r.body.slice(0, 2000)
                             });
                         } catch (e) { /* not JSON */ }
                     }
                     return schemas;
                 }
-
-                // ---------- Feedback 7: Endpoint Stability ----------
+                buildKotlinDataModels() {
+                    const models = [];
+                    const schemas = this.buildResponseSchemas();
+                    for (const s of schemas) {
+                        if (!s.schema || typeof s.schema !== 'object' || Array.isArray(s.schema)) continue;
+                        const className = this.toPascalCase(s.apiRole || s.category || 'Response');
+                        const fields = [];
+                        for (const [key, type] of Object.entries(s.schema)) {
+                            const ktType = this.toKotlinType(type);
+                            fields.push(`    val ${this.toCamelCase(key)}: ${ktType}`);
+                        }
+                        if (fields.length > 0) {
+                            models.push({
+                                className,
+                                endpoint: `${s.method} ${s.template}`,
+                                apiRole: s.apiRole,
+                                kotlin: `data class ${className}(\n${fields.join(',\n')}\n)`
+                            });
+                        }
+                    }
+                    return models;
+                }
+                toPascalCase(str) {
+                    return str.replace(/[^a-zA-Z0-9]/g, ' ').split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+                }
+                toCamelCase(str) {
+                    const pascal = this.toPascalCase(str);
+                    return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+                }
+                toKotlinType(schemaType) {
+                    if (schemaType === 'string') return 'String';
+                    if (schemaType === 'int') return 'Int';
+                    if (schemaType === 'float') return 'Double';
+                    if (schemaType === 'bool') return 'Boolean';
+                    if (schemaType === 'null') return 'String?';
+                    if (typeof schemaType === 'string' && schemaType.startsWith('[')) return 'List<Any>';
+                    if (typeof schemaType === 'object') return 'Map<String, Any>';
+                    return 'Any';
+                }
+                buildDataFlowGraph() {
+                    const flows = [];
+                    const apiRequests = this.rawRequests.filter(r =>
+                    (r.resourceType === 'xmlhttprequest' || r.resourceType === 'fetch') &&
+                    MEDIA_PIPELINE.includes(r.category) && r.body
+                    ).sort((a, b) => a.startTime - b.startTime);
+                    const responseFields = [];
+                    for (const r of apiRequests) {
+                        try {
+                            const parsed = JSON.parse(r.body);
+                            const fields = this.extractFlatFields(parsed, '', 0);
+                            responseFields.push({ request: r, fields, template: getRouteTemplate(r.url), apiRole: r.apiRole });
+                        } catch (e) { /* not JSON */ }
+                    }
+                    for (let i = 1; i < apiRequests.length; i++) {
+                        const current = apiRequests[i];
+                        let currentParams = {};
+                        try {
+                            const u = new URL(current.url);
+                            u.searchParams.forEach((v, k) => { currentParams[k] = v; });
+                        } catch (e) {}
+                        const pathSegments = (() => { try { return new URL(current.url).pathname.split('/').filter(Boolean); } catch (e) { return []; } })();
+                        for (let j = 0; j < i; j++) {
+                            const prev = responseFields[j];
+                            if (!prev) continue;
+                            for (const [fieldPath, fieldValue] of Object.entries(prev.fields)) {
+                                const strVal = String(fieldValue);
+                                if (strVal.length < 2 || strVal.length > 100) continue;
+                                for (const [pk, pv] of Object.entries(currentParams)) {
+                                    if (pv === strVal) {
+                                        flows.push({
+                                            value: strVal,
+                                            from: { endpoint: `${prev.request.method} ${prev.template}`, field: fieldPath, apiRole: prev.apiRole },
+                                            to: { endpoint: `${current.method} ${getRouteTemplate(current.url)}`, param: pk, apiRole: current.apiRole }
+                                        });
+                                    }
+                                }
+                                for (const seg of pathSegments) {
+                                    if (seg === strVal) {
+                                        flows.push({
+                                            value: strVal,
+                                            from: { endpoint: `${prev.request.method} ${prev.template}`, field: fieldPath, apiRole: prev.apiRole },
+                                            to: { endpoint: `${current.method} ${getRouteTemplate(current.url)}`, param: 'path:' + seg, apiRole: current.apiRole }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    const seen = new Set();
+                    const unique = flows.filter(f => {
+                        const key = f.value + f.from.endpoint + f.to.endpoint;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    });
+                    return unique.slice(0, 30);
+                }
+                extractFlatFields(obj, prefix, depth) {
+                    const result = {};
+                    if (depth > 3 || !obj || typeof obj !== 'object') return result;
+                    if (Array.isArray(obj)) {
+                        if (obj.length > 0 && typeof obj[0] === 'object') {
+                            const sub = this.extractFlatFields(obj[0], prefix + '[]', depth + 1);
+                            Object.assign(result, sub);
+                        }
+                        return result;
+                    }
+                    for (const [key, val] of Object.entries(obj)) {
+                        const path = prefix ? `${prefix}.${key}` : key;
+                        if (typeof val === 'string' || typeof val === 'number') {
+                            result[path] = val;
+                        } else if (val && typeof val === 'object') {
+                            Object.assign(result, this.extractFlatFields(val, path, depth + 1));
+                        }
+                    }
+                    return result;
+                }
+                buildHtmlDataSources() {
+                    const sources = [];
+                    for (const [url, html] of Object.entries(this.htmlSnapshots)) {
+                        if (!html) continue;
+                        const entry = { url, dataAttributes: [], inlineState: null };
+                        const dataAttrRegex = /data-(id|anilist|slug|episode|server|anime|mal|key)="([^"]+)"/gi;
+                        let match;
+                        const seenAttrs = new Set();
+                        while ((match = dataAttrRegex.exec(html)) !== null) {
+                            const key = `data-${match[1]}="${match[2]}"`;
+                            if (!seenAttrs.has(key)) {
+                                seenAttrs.add(key);
+                                entry.dataAttributes.push({ attr: `data-${match[1]}`, value: match[2] });
+                            }
+                        }
+                        if (html.includes('__INITIAL_STATE__')) entry.inlineState = '__INITIAL_STATE__';
+                        else if (html.includes('__NEXT_DATA__')) entry.inlineState = '__NEXT_DATA__';
+                        else if (html.includes('__NUXT__')) entry.inlineState = '__NUXT__';
+                        else if (html.includes('window.__data')) entry.inlineState = 'window.__data';
+                        if (entry.dataAttributes.length > 0 || entry.inlineState) {
+                            sources.push(entry);
+                        }
+                    }
+                    return sources;
+                }
+                buildRedirectChains() {
+                    const chains = [];
+                    const redirects = this.rawRequests.filter(r => r.redirectURL || (r.status >= 300 && r.status < 400));
+                    for (const r of redirects) {
+                        if (!r.redirectURL) continue;
+                        const chain = [{ url: r.url, status: r.status }];
+                        let nextUrl = r.redirectURL;
+                        let depth = 0;
+                        while (nextUrl && depth < 5) {
+                            const nextReq = this.rawRequests.find(nr => nr.url === nextUrl || nr.rawUrl === nextUrl);
+                            if (nextReq) {
+                                chain.push({ url: nextReq.url, status: nextReq.status });
+                                nextUrl = nextReq.redirectURL || null;
+                            } else {
+                                chain.push({ url: nextUrl, status: 'final (not captured)' });
+                                nextUrl = null;
+                            }
+                            depth++;
+                        }
+                        if (chain.length > 1) {
+                            chains.push({ start: r.url, chain, finalHost: (() => { try { return new URL(chain[chain.length - 1].url).hostname; } catch (e) { return 'unknown'; } })() });
+                        }
+                    }
+                    return chains;
+                }
                 buildEndpointStability() {
                     const endpoints = [];
                     const seen = new Set();
@@ -940,19 +1215,15 @@ const PROVIDER_FAMILIES = [
                         if (seen.has(key)) continue;
                         seen.add(key);
                         let stability = 10;
-                        // Framework assets change constantly
                         if (r.category === 'Script' || r.category === 'Third-party Script') stability = 2;
                         else if (r.category === 'Asset' || r.category === 'Third-party Asset') stability = 3;
-                        // Proxy endpoints change frequently
                         else if (r.category === 'Proxy API') stability = 6;
-                        // CDN manifests can rotate
                         else if (r.category === 'Manifest') {
                             try {
                                 const host = new URL(r.url).hostname;
                                 if (host !== this.domain) stability = 7;
                             } catch (e) {}
                         }
-                        // Core APIs are stable
                         else if (r.category === 'Search API' || r.category === 'Anime Details API' || r.category === 'Episodes API') stability = 10;
                         else if (r.category === 'Servers API') stability = 9;
                         else if (r.category === 'Cloudflare') stability = 4;
@@ -963,8 +1234,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return endpoints.sort((a, b) => parseInt(b.stability) - parseInt(a.stability));
                 }
-
-                // ---------- Feedback 8: Generator Hints ----------
                 buildGeneratorHints() {
                     const hints = [];
                     const seen = new Set();
@@ -985,10 +1254,49 @@ const PROVIDER_FAMILIES = [
                     }
                     return hints;
                 }
-
-                // ============================================================
-                // PRIORITY 1 — Dimensional Scoring
-                // ============================================================
+                buildEvidence() {
+                    const evidence = {};
+                    const jsReport = this.buildJsDependencyReport();
+                    const playable = this.detectPlayableUrls();
+                    const apiRequests = this.rawRequests.filter(r => (r.resourceType === 'xmlhttprequest' || r.resourceType === 'fetch'));
+                    const jsonApis = apiRequests.filter(r => r.responseHeaders && (r.responseHeaders['content-type'] || '').includes('application/json'));
+                    const ptEvidence = [];
+                    if (playable.some(p => p.type === 'hls')) ptEvidence.push({ fact: 'application/vnd.apple.m3u8 requested', supports: true });
+                    if (playable.some(p => p.type === 'dash')) ptEvidence.push({ fact: 'DASH manifest (.mpd) requested', supports: true });
+                    if (playable.some(p => p.type === 'mp4')) ptEvidence.push({ fact: 'Direct .mp4 requested', supports: true });
+                    if (this.rawRequests.some(r => r.category === 'Embed')) ptEvidence.push({ fact: 'iframe embed observed', supports: true });
+                    if (playable.length === 0) ptEvidence.push({ fact: 'No media URL observed in session', supports: false });
+                    evidence['Provider Type'] = {
+                        conclusion: playable.length > 0 ? 'Media observed' : 'No media observed',
+                        confidence: playable.length > 0 ? 97 : 30,
+                        evidence: ptEvidence
+                    };
+                    const diffEvidence = [];
+                    diffEvidence.push({ fact: `${jsonApis.length} JSON APIs observed`, supports: jsonApis.length > 0 });
+                    diffEvidence.push({ fact: jsReport.some(j => j.contains.includes('webassembly')) ? 'WASM detected' : 'No WASM', supports: !jsReport.some(j => j.contains.includes('webassembly')) });
+                    diffEvidence.push({ fact: jsReport.some(j => j.contains.includes('eval(')) ? 'eval() detected' : 'No eval()', supports: !jsReport.some(j => j.contains.includes('eval(')) });
+                    diffEvidence.push({ fact: jsReport.some(j => j.contains.some(p => ['aes', 'cryptojs', 'decrypt'].includes(p))) ? 'AES/Crypto detected' : 'No AES/Crypto', supports: !jsReport.some(j => j.contains.some(p => ['aes', 'cryptojs', 'decrypt'].includes(p))) });
+                    const hasPost = apiRequests.some(r => r.method === 'POST');
+                    diffEvidence.push({ fact: hasPost ? 'POST resolver observed' : 'No POST requests', supports: true });
+                    const bodiesCaptured = apiRequests.filter(r => r.body).length;
+                    diffEvidence.push({ fact: `${bodiesCaptured}/${apiRequests.length} response bodies captured`, supports: bodiesCaptured > apiRequests.length * 0.5 });
+                    evidence['Difficulty'] = {
+                        conclusion: 'Based on observed complexity factors',
+                        confidence: Math.round((bodiesCaptured / Math.max(1, apiRequests.length)) * 100),
+                        evidence: diffEvidence
+                    };
+                    const replayEvidence = [];
+                    const replay = this.buildReplayTest();
+                    replayEvidence.push({ fact: `Required headers: ${replay.requiredHeaders.join(', ') || 'none'}`, supports: replay.requiredHeaders.length <= 1 });
+                    replayEvidence.push({ fact: `Blockers: ${replay.blockers.length}`, supports: replay.blockers.length === 0 });
+                    replay.blockers.forEach(b => replayEvidence.push({ fact: b, supports: false }));
+                    evidence['Replayability'] = {
+                        conclusion: replay.verdict,
+                        confidence: replay.replayable ? 95 : 70,
+                        evidence: replayEvidence
+                    };
+                    return evidence;
+                }
                 buildDimensionalScores() {
                     const stability = this.buildStabilityReport();
                     const replay = this.buildReplayTest();
@@ -1014,7 +1322,6 @@ const PROVIDER_FAMILIES = [
                     const hasEpisodes = categories.includes('Episodes API');
                     const hasServers = categories.includes('Servers API');
                     const hasManifest = categories.includes('Manifest');
-
                     let reScore = 0;
                     const reReasons = [];
                     if (hasJsonApi) { reReasons.push({ factor: 'REST JSON APIs', points: 0, easy: true }); }
@@ -1027,7 +1334,6 @@ const PROVIDER_FAMILIES = [
                     if (usesWASM) { reScore += 4; reReasons.push({ factor: 'WASM module', points: 4, easy: false }); }
                     if (usesFingerprint) { reScore += 5; reReasons.push({ factor: 'Browser fingerprinting', points: 5, easy: false }); }
                     reScore = Math.min(10, reScore);
-
                     let implScore = 0;
                     const implReasons = [];
                     if (hasSearch) { implScore += 1; implReasons.push({ factor: 'Search endpoint', points: 1 }); }
@@ -1040,7 +1346,6 @@ const PROVIDER_FAMILIES = [
                     if (dynamicJs && !usesAES) { implScore += 3; implReasons.push({ factor: 'JS execution needed', points: 3 }); }
                     if (usesAES) { implScore += 4; implReasons.push({ factor: 'Crypto reproduction', points: 4 }); }
                     implScore = Math.min(10, implScore);
-
                     let maintScore = 0;
                     const maintReasons = [];
                     if (usesCloudflare) { maintScore += 3; maintReasons.push({ factor: 'Cloudflare protection', points: 3 }); }
@@ -1050,7 +1355,6 @@ const PROVIDER_FAMILIES = [
                     if (shortLivedToken) { maintScore += 2; maintReasons.push({ factor: 'Short-lived tokens', points: 2 }); }
                     if (usesFingerprint) { maintScore += 4; maintReasons.push({ factor: 'Fingerprinting updates', points: 4 }); }
                     maintScore = Math.min(10, maintScore);
-
                     let replayScore = 0;
                     const replayReasons = [];
                     if (replay.replayable) { replayScore = 1; replayReasons.push({ factor: 'Native HTTP replay possible', points: 0, easy: true }); }
@@ -1060,7 +1364,6 @@ const PROVIDER_FAMILIES = [
                     }
                     if (usesCloudflare) { replayScore += 2; replayReasons.push({ factor: 'Cloudflare session', points: 2, easy: false }); }
                     replayScore = Math.min(10, replayScore);
-
                     const totalDetections = 6;
                     let confidentDetections = 0;
                     if (hasSearch || hasEpisodes || hasServers) confidentDetections++;
@@ -1070,9 +1373,7 @@ const PROVIDER_FAMILIES = [
                     if (this.results.length >= 3) confidentDetections++;
                     if (this.jsInventory.length > 0) confidentDetections++;
                     const confidence = Math.round((confidentDetections / totalDetections) * 100);
-
                     const overall = Math.round((reScore * 0.3 + implScore * 0.3 + maintScore * 0.2 + replayScore * 0.2));
-
                     return {
                         reverseEngineering: { score: reScore, reasons: reReasons },
                         implementation: { score: implScore, reasons: implReasons },
@@ -1082,7 +1383,6 @@ const PROVIDER_FAMILIES = [
                         overall: Math.min(10, overall)
                     };
                 }
-
                 buildSplitReplayability() {
                     const playable = this.detectPlayableUrls();
                     const replay = this.buildReplayTest();
@@ -1097,7 +1397,6 @@ const PROVIDER_FAMILIES = [
                     : replay.blockers.length > 0 ? replay.blockers[0] : 'Unknown blocker';
                     return { playableStream: playableStreamFound, mediaType, replayMethod, nativeHttpReplay: nativeReplay, reason };
                 }
-
                 detectProviderFamily() {
                     const results = [];
                     const allUrls = this.rawRequests.map(r => r.url.toLowerCase());
@@ -1108,7 +1407,6 @@ const PROVIDER_FAMILIES = [
                     const allJsNames = this.jsInventory.map(j => (j.name || '').toLowerCase());
                     const allJsUrls = this.jsInventory.map(j => (j.url || '').toLowerCase());
                     const allJsPatterns = this.jsInventory.flatMap(j => j.patterns || []);
-
                     for (const family of PROVIDER_FAMILIES) {
                         let score = 0;
                         let maxScore = 0;
@@ -1138,7 +1436,6 @@ const PROVIDER_FAMILIES = [
                             results.push({ id: family.id, name: family.name, extractor: family.extractor, player: family.signals.player, confidence, evidence });
                         }
                     }
-
                     const frameworks = new Set();
                     this.results.forEach(r => {
                         if (r.frameworks && r.frameworks.result) r.frameworks.result.forEach(f => frameworks.add(f));
@@ -1149,13 +1446,10 @@ const PROVIDER_FAMILIES = [
                         if (frameworks.has('Nuxt.js') && !results.some(r => r.id === 'custom_nuxt')) {
                             results.push({ id: 'custom_nuxt', name: 'Custom Nuxt.js API', extractor: null, player: null, confidence: 60, evidence: ['Nuxt.js framework detected'] });
                         }
-
                         const playerDetected = allJsPatterns.includes('hls') || allJsNames.some(n => n.includes('hls')) ? 'HLS.js'
                         : allJsPatterns.includes('jwplayer') || allJsNames.some(n => n.includes('jwplayer')) ? 'JW Player'
                         : allJsPatterns.includes('vidstack') ? 'Vidstack' : null;
-
                         results.sort((a, b) => b.confidence - a.confidence);
-
                         let primary;
                         if (results.length > 0) {
                             primary = results[0];
@@ -1168,13 +1462,11 @@ const PROVIDER_FAMILIES = [
                         }
                         return { primary, all: results, playerDetected, noMatch: results.length === 0 };
                 }
-
                 buildTokenSourceChain() {
                     const chains = [];
                     const playable = this.detectPlayableUrls();
                     const tokens = this.analyzeTokens();
                     const jsReport = this.buildJsDependencyReport();
-
                     for (const p of playable) {
                         const chain = [];
                         chain.push({ step: 1, description: `Playable URL found: ${p.type.toUpperCase()}`, detail: p.url.slice(0, 120) + (p.url.length > 120 ? '…' : '') });
@@ -1229,7 +1521,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return chains;
                 }
-
                 buildRequestImportance() {
                     const critical = [];
                     const seen = new Set();
@@ -1250,7 +1541,6 @@ const PROVIDER_FAMILIES = [
                     const ignored = Object.entries(ignoredCategories).map(([cat, count]) => ({ category: cat, count })).sort((a, b) => b.count - a.count);
                     return { critical, ignored, totalRequests: this.rawRequests.length, criticalCount: critical.length };
                 }
-
                 buildRequestTemplates() {
                     const templates = [];
                     const seen = new Set();
@@ -1272,7 +1562,9 @@ const PROVIDER_FAMILIES = [
                         if (h['content-type']) headers['Content-Type'] = h['content-type'];
                         if (h['x-requested-with']) headers['X-Requested-With'] = h['x-requested-with'];
                         let responseSummary = null;
+                        let responseBodySample = null;
                         if (r.body) {
+                            responseBodySample = r.body.slice(0, 2000);
                             try {
                                 const parsed = JSON.parse(r.body);
                                 responseSummary = this.summarizeJson(parsed);
@@ -1285,13 +1577,12 @@ const PROVIDER_FAMILIES = [
                         templates.push({
                             method: r.method, template, category: r.category, apiRole: r.apiRole, url: r.url.slice(0, 200),
                                        headers, requestBody: r.requestBody ? r.requestBody.slice(0, 500) : null,
-                                       responseStatus: r.status, responseSummary,
+                                       responseStatus: r.status, responseSummary, responseBodySample,
                                        pagesObserved: (this.networkDb[r.method + ':' + r.url] && this.networkDb[r.method + ':' + r.url].pages) || []
                         });
                     }
                     return templates;
                 }
-
                 summarizeJson(obj, depth = 0) {
                     if (depth > 2) return '…';
                     if (Array.isArray(obj)) {
@@ -1313,7 +1604,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return String(obj);
                 }
-
                 buildConfidenceScores() {
                     const scores = {};
                     const apiGroups = this.apiGroups;
@@ -1330,7 +1620,6 @@ const PROVIDER_FAMILIES = [
                     scores['Provider Family'] = fam.primary ? fam.primary.confidence : 0;
                     return scores;
                 }
-
                 buildImplementationEstimate() {
                     const dims = this.buildDimensionalScores();
                     const graph = this.buildDependencyGraph();
@@ -1366,7 +1655,6 @@ const PROVIDER_FAMILIES = [
                     const timeStr = timeMinutes >= 60 ? `${Math.round(timeMinutes / 60)} hours` : `${timeMinutes} minutes`;
                     return { lines, dependencies, timeStr, timeMinutes };
                 }
-
                 buildProviderComparison() {
                     const stability = this.buildStabilityReport();
                     const graph = this.buildDependencyGraph();
@@ -1402,7 +1690,6 @@ const PROVIDER_FAMILIES = [
                     : 'Build from scratch';
                     return { closestMatch: bestMatch ? bestMatch.name : 'None', similarity: bestSimilarity, sharedApis: `${bestShared}/${bestTotal}`, reuse, rewrite, recommendation };
                 }
-
                 buildFinalRecommendation() {
                     const dims = this.buildDimensionalScores();
                     const estimate = this.buildImplementationEstimate();
@@ -1435,19 +1722,16 @@ const PROVIDER_FAMILIES = [
                         existingExtractor: fam.primary && fam.primary.extractor ? fam.primary.extractor : 'None', reason
                     };
                 }
-
                 buildProviderSignature() {
                     const replay = this.buildReplayTest();
                     const stability = this.buildStabilityReport();
                     const playable = this.detectPlayableUrls();
                     const dims = this.buildDimensionalScores();
-
                     let finalOutput = 'unknown';
                     let providerType = 'Unknown';
                     if (playable.some(p => p.type === 'hls')) { finalOutput = 'm3u8'; }
                     else if (playable.some(p => p.type === 'dash')) { finalOutput = 'mpd'; }
                     else if (playable.some(p => p.type === 'mp4')) { finalOutput = 'mp4'; }
-
                     const hasIframe = playable.some(p => p.type === 'iframe') || this.rawRequests.some(r => r.category === 'Embed');
                     if (finalOutput !== 'unknown') {
                         providerType = hasIframe ? `Iframe → ${finalOutput.toUpperCase()}` : `Direct → ${finalOutput.toUpperCase()}`;
@@ -1456,10 +1740,8 @@ const PROVIDER_FAMILIES = [
                     } else {
                         providerType = 'UNKNOWN (no media URL observed)';
                     }
-
                     const playableStreamFound = playable.length > 0;
                     const providerReplayable = replay.replayable;
-
                     return {
                         providerType, difficulty: dims.overall,
                         difficultyBreakdown: dims.reverseEngineering.reasons.concat(dims.implementation.reasons),
@@ -1470,7 +1752,6 @@ const PROVIDER_FAMILIES = [
                         dimensionalScores: dims
                     };
                 }
-
                 buildRequestLayers() {
                     const layers = { 1: [], 2: [], 3: [], 4: [], 5: [] };
                     const seen = new Set();
@@ -1489,7 +1770,6 @@ const PROVIDER_FAMILIES = [
                         layer5_assets: layers[5]
                     };
                 }
-
                 detectRedFlags() {
                     const flags = [];
                     const all = this.rawRequests;
@@ -1517,7 +1797,6 @@ const PROVIDER_FAMILIES = [
                     if (fpScripts.length) flags.push({ flag: 'Browser fingerprinting', severity: 'low', evidence: `Fingerprint patterns in: ${fpScripts.map(s => s.name).join(', ')}`, impact: 'May gate access on fingerprint' });
                     return flags;
                 }
-
                 detectGreenFlags() {
                     const flags = [];
                     let sameOriginApi = [];
@@ -1543,7 +1822,6 @@ const PROVIDER_FAMILIES = [
                     }
                     return flags;
                 }
-
                 detectPlayableUrls() {
                     const out = [];
                     this.rawRequests.forEach(r => {
@@ -1560,8 +1838,6 @@ const PROVIDER_FAMILIES = [
                     });
                     return out;
                 }
-
-                // ---------- crawl ----------
                 predictLink(url, text = "") {
                     try {
                         const u = new URL(url);
@@ -1584,7 +1860,6 @@ const PROVIDER_FAMILIES = [
                         return { score, type, reason };
                     } catch (e) { return { score: -9999, type: "Error", reason: "Invalid URL" }; }
                 }
-
                 addToQueue(url, score, predictedType, parentUrl, parentType, depth, selector, text) {
                     if (depth > 4) { this.rejectedLinks.push({ url, reason: "Exceeded depth", parentUrl }); return; }
                     const norm = normalizeUrl(url);
@@ -1596,7 +1871,6 @@ const PROVIDER_FAMILIES = [
                     this.queue.push({ url: norm, score, predictedType, parentUrl, parentType, depth, selector, text });
                     this.queue.sort((a, b) => b.score - a.score);
                 }
-
                 async updateProgress(step, currentUrl = "") {
                     const stats = {
                         pagesAnalyzed: this.results.length, queueLength: this.queue.length,
@@ -1606,7 +1880,6 @@ const PROVIDER_FAMILIES = [
                     };
                     await browser.storage.local.set({ msaProgress: { step, currentUrl, stats } });
                 }
-
                 async explore() {
                     this.startTime = Date.now();
                     this.addToQueue(this.startUrl, 1000, "Homepage", null, "N/A", 0, "user_input", "Start URL");
@@ -1628,6 +1901,8 @@ const PROVIDER_FAMILIES = [
                             this.activeTabId = tab.id;
                             this.currentPageUrl = item.url;
                             this.visitedUrls.add(item.url);
+                            const tabStartTime = Date.now();
+                            const MAX_TAB_TIME = 50000; // 50 seconds hard limit per tab
                             await this.updateProgress("Waiting for load", item.url);
                             await new Promise((resolve) => {
                                 let resolved = false;
@@ -1640,14 +1915,43 @@ const PROVIDER_FAMILIES = [
                                 setTimeout(() => { if (!resolved) { resolved = true; resolve(); } }, 20000);
                             });
                             await this.updateProgress("Waiting for network", item.url);
-                            await new Promise(r => setTimeout(r, 6000));
+                            const isWatchPage = item.url.includes('/watch') || item.url.includes('/episode');
+                            const waitTime = isWatchPage ? 15000 : 6000;
+                            await new Promise(r => setTimeout(r, waitTime));
                             await this.updateProgress("Running detectors", item.url);
                             let pageData = {};
                             try {
-                                const results = await browser.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+                                const executePromise = browser.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+                                // Calculate remaining time to ensure the TOTAL tab time doesn't exceed 50s
+                                const elapsed = Date.now() - tabStartTime;
+                                const remainingTime = Math.max(2000, MAX_TAB_TIME - elapsed);
+                                const timeoutPromise = new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error(`Tab execution timeout (limit: ${MAX_TAB_TIME/1000}s)`)), remainingTime)
+                                );
+                                // Race the script execution against the 50s hard limit
+                                const results = await Promise.race([executePromise, timeoutPromise]);
                                 pageData = results[0].result || {};
-                            } catch (e) { await browser.storage.local.set({ msaError: `Injection failed: ${e.message}` }); }
-                            this.mergeIntercepted(pageData.intercepted || []);
+                            } catch (e) {
+                                console.error('[MSA-bg] executeScript FAILED or TIMEOUT:', e);
+                                await browser.storage.local.set({ msaError: `Detector timeout/failed: ${e.message}` });
+                            }
+                            // === NEW DIAGNOSTIC LOG ===
+                            console.log('[MSA-bg] content.js result:', JSON.stringify({
+                                url: pageData.url,
+                                error: pageData.error || null,
+                                linksCount: pageData.links ? pageData.links.length : 'MISSING',
+                                linksSample: pageData.links ? pageData.links.slice(0, 3) : 'MISSING',
+                                                                                      interceptedCount: pageData.intercepted ? pageData.intercepted.length : 'MISSING',
+                                                                                      interceptedSample: pageData.intercepted && pageData.intercepted.length > 0 ?
+                                                                                      { url: pageData.intercepted[0].url, hasBody: !!pageData.intercepted[0].body, bodyLen: pageData.intercepted[0].body ? pageData.intercepted[0].body.length : 0 } : 'EMPTY',
+                                                                                      pageType: pageData.pageType || 'unknown'
+                            }));
+
+                            // --- UPDATED: Accumulate and merge intercepted requests ---
+                            const pageIntercepted = pageData.intercepted || [];
+                            this.allIntercepted.push(...pageIntercepted);
+                            this.mergeIntercepted(pageIntercepted);
+
                             if (pageData.htmlSnapshot) this.htmlSnapshots[item.url] = pageData.htmlSnapshot;
                             if (pageData.detectors && pageData.detectors.jsInventory) this.jsInventory.push(...pageData.detectors.jsInventory);
                             await this.updateProgress("Classifying page", item.url);
@@ -1678,7 +1982,12 @@ const PROVIDER_FAMILIES = [
                                 this.addToQueue(pageData.searchViewAllLink, 950, "Search", item.url, classification.type, item.depth + 1, "ajax_dropdown", "View All Results");
                             }
                             await this.updateProgress("Scoring links", item.url);
-                            for (const link of pageData.links || []) {
+                            console.log('[MSA-bg] Processing links:', {
+                                count: pageData.links ? pageData.links.length : 0,
+                                isArray: Array.isArray(pageData.links),
+                                        type: typeof pageData.links
+                            });
+                            for (const link of (pageData.links || [])) {
                                 const prediction = this.predictLink(link.url, link.text);
                                 this.addToQueue(link.url, prediction.score, prediction.type, item.url, classification.type, item.depth + 1, link.selector, link.text);
                             }
@@ -1686,20 +1995,32 @@ const PROVIDER_FAMILIES = [
                             this.activeTabId = null;
                             this.currentPageUrl = null;
                         }
+
+                        // --- UPDATED: Final reconciliation pass for late-arriving bodies ---
+                        await this.updateProgress("Reconciling response bodies", this.startUrl);
+                        await new Promise(r => setTimeout(r, 2000));
+                        // Final pass: re-merge everything so late-arriving bodies patch any webRequest
+                        // entries that finalized AFTER their page's merge ran.
+                        this.mergeIntercepted(this.allIntercepted);
+
                         await this.updateProgress("Generating report", this.startUrl);
                         const report = this.generateReport();
                         const har = this.generateHAR();
                         await browser.storage.local.set({
                             msaStatus: "complete", msaReport: report, msaHAR: har,
                             msaSnapshots: this.htmlSnapshots,
-                            msaRaw: { networkDb: this.networkDb, rawRequests: this.rawRequests, apiGroups: this.apiGroups, thirdPartyCDNs: this.thirdPartyCDNs },
+                            msaRaw: {
+                                networkDb: this.networkDb, rawRequests: this.rawRequests,
+                                apiGroups: this.apiGroups, thirdPartyCDNs: this.thirdPartyCDNs,
+                                bodyCaptureCount: this.bodyCaptureCount,
+                                bodyCaptureErrors: this.bodyCaptureErrors
+                            },
                             msaActive: false
                         });
                     } catch (err) {
                         await browser.storage.local.set({ msaStatus: "error", msaError: `FATAL: ${err.message}\n${err.stack}`, msaActive: false });
                     }
                 }
-
                 classifyPage(url, pageData, predictedType) {
                     const u = new URL(url);
                     const path = u.pathname.toLowerCase();
@@ -1757,7 +2078,6 @@ const PROVIDER_FAMILIES = [
                     if (confidence > 100) confidence = 100;
                     return { type, family, variant, activeFilters, confidence, reasons };
                 }
-
                 generateHAR() {
                     const entries = this.rawRequests.map(r => {
                         let qs = [];
@@ -1788,7 +2108,6 @@ const PROVIDER_FAMILIES = [
                         }
                     };
                 }
-
                 generateReport() {
                     const duration = Date.now() - this.startTime;
                     const now = new Date();
@@ -1825,7 +2144,6 @@ const PROVIDER_FAMILIES = [
                         const s = this.htmlSnapshots[u];
                         snapshotIndex[u] = { size: s.length, preview: s.slice(0, 2000) };
                     });
-
                     const providerIntelligence = {
                         providerSignature: this.buildProviderSignature(),
                         providerFamily: this.detectProviderFamily(),
@@ -1842,8 +2160,13 @@ const PROVIDER_FAMILIES = [
                         manifestProvenance: this.buildManifestProvenance(),
                         requestTemplates: this.buildRequestTemplates(),
                         responseSchemas: this.buildResponseSchemas(),
+                        kotlinDataModels: this.buildKotlinDataModels(),
+                        dataFlowGraph: this.buildDataFlowGraph(),
+                        htmlDataSources: this.buildHtmlDataSources(),
+                        redirectChains: this.buildRedirectChains(),
                         endpointStability: this.buildEndpointStability(),
                         generatorHints: this.buildGeneratorHints(),
+                        evidence: this.buildEvidence(),
                         jsDependencyReport: this.buildJsDependencyReport(),
                         replayTest: this.buildReplayTest(),
                         stabilityReport: this.buildStabilityReport(),
@@ -1856,9 +2179,14 @@ const PROVIDER_FAMILIES = [
                     const blueprint = this.generateBlueprint(providerIntelligence);
                     return {
                         meta: {
-                            tool: "Media Site Analyzer", version: "3.0.0", schemaVersion: 10,
+                            tool: "Media Site Analyzer", version: "3.0.0", schemaVersion: 12,
                             generatedAt: now.toISOString(), analysisDurationMs: duration,
                             domain: this.domain, startUrl: this.startUrl, filename,
+                            bodyCaptureStats: {
+                                captured: this.bodyCaptureCount,
+                                errors: this.bodyCaptureErrors.length,
+                                errorDetails: this.bodyCaptureErrors.slice(0, 10)
+                            },
                             detectorsUsed: [
                                 { name: "Framework Detector", version: "2.0" },
                                 { name: "Metadata Detector", version: "1.3" },
@@ -1868,7 +2196,7 @@ const PROVIDER_FAMILIES = [
                                 { name: "Network Recorder", version: "1.0" },
                                 { name: "JS Inventory", version: "1.0" },
                                 { name: "Flag Detector", version: "1.0" },
-                                { name: "Provider Intelligence", version: "4.0" },
+                                { name: "Provider Intelligence", version: "5.0" },
                                 { name: "Provider Family Detector", version: "2.1" },
                                 { name: "Token Source Tracer", version: "2.1" },
                                 { name: "Request Template Extractor", version: "2.0" },
@@ -1882,6 +2210,12 @@ const PROVIDER_FAMILIES = [
                                 { name: "Response Schema Inferrer", version: "1.0" },
                                 { name: "Endpoint Stability Scorer", version: "1.0" },
                                 { name: "Generator Hint Builder", version: "1.0" },
+                                { name: "Data Flow Tracer", version: "1.0" },
+                                { name: "Kotlin Model Generator", version: "1.0" },
+                                { name: "HTML Data Source Extractor", version: "1.0" },
+                                { name: "Redirect Chain Tracer", version: "1.0" },
+                                { name: "Evidence Builder", version: "1.0" },
+                                { name: "Response Body Capture", version: "2.0" },
                                 { name: "Active Search Simulator", version: "1.7" }
                             ]
                         },
@@ -1907,7 +2241,6 @@ const PROVIDER_FAMILIES = [
                         allPages: this.results
                     };
                 }
-
                 generateBlueprint(pi) {
                     const order = [];
                     if (this.repPages["Search"] || this.apiGroups["Search"]) order.push("1. Search");
@@ -1929,7 +2262,6 @@ const PROVIDER_FAMILIES = [
                     };
                 }
             }
-
             // ---------- wiring ----------
             let explorer = null;
             browser.webRequest.onBeforeRequest.addListener(d => {
@@ -1952,12 +2284,10 @@ const PROVIDER_FAMILIES = [
                 if (!explorer || d.tabId !== explorer.activeTabId) return;
                 explorer.onRequestError(d);
             }, { urls: ["<all_urls>"] });
-
             function downloadText(text, filename, mime) {
                 const dataUrl = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(text);
                 return browser.downloads.download({ url: dataUrl, filename, saveAs: false });
             }
-
             browser.runtime.onMessage.addListener((message) => {
                 if (message.action === "START_EXPLORATION") {
                     if (explorer) return Promise.resolve({ status: "error", errorMessage: "Analysis already running." });
