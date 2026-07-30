@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Media Site Analyzer",
-  "version": "3.0.0",
+  "version": "3.1.1",
   "description": "Network-first reverse-engineering toolkit for media streaming sites. Records, classifies, and explains the full playback protocol, then emits a replayable Provider Signature.",
   "browser_specific_settings": {
     "gecko": {
@@ -16,15 +16,19 @@
     "storage",
     "tabs",
     "downloads",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "webRequestFilterResponse"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Analyze this Site"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "content_scripts": [
     {
