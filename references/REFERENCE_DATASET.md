@@ -452,9 +452,6 @@ https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master
 MasterDtos.kt
 https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/MasterDtos.kt
 
-AllAnimeProvider.kt
-https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AllAnimeProvider.kt
-
 AniDapProvider.kt
 https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AniDapProvider.kt
 
@@ -470,14 +467,26 @@ https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master
 AnimeKizzProvider.kt
 https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AnimeKizzProvider.kt
 
-GogoProvider.kt
-https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/GogoProvider.kt
+AniDBProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AniDBProvider.kt
 
-AllAnimeCrypto.kt
-https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/allanime/AllAnimeCrypto.kt
+AniZoneProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AniZoneProvider.kt
 
-AllAnimeKeyManager.kt
-https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/allanime/AllAnimeKeyManager.kt
+AnimeGGProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AnimeGGProvider.kt
+
+AnimeKizzProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AnimeKizzProvider.kt
+
+AnimeOnsenProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/AnimeOnsenProvider.kt
+
+SubspleaseProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/SubspleaseProvider.kt
+
+TorrentioProvider.kt
+https://raw.githubusercontent.com/Hunterthief/anime-extensions/refs/heads/master/src/en/masterextension/src/eu/kanade/tachiyomi/animeextension/en/masterextension/videosources/TorrentioProvider.kt
 
 
 template_build.gradle
